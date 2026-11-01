@@ -1,0 +1,29 @@
+name: Release
+
+# Тег v* → нова версія пакета в GitHub Packages. Проєкти піднімають її у себе звичайним PR.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@rocksystems'
+      - run: npm ci
+      - run: npm run check
+      - name: Тег збігається з версією
+        run: test "${GITHUB_REF_NAME}" = "v$(node -p "require('./package.json').version")"
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}

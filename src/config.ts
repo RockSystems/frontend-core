@@ -1,6 +1,9 @@
 // Ядро не знает языка и форматов проекта: тексты, числа и реакцию на сбой
 // проект передаёт один раз при старте — `SharedConfig.configure(...)` до монтирования.
 
+import type { Component } from 'vue'
+import type { ApiProblemEntry } from './api/errors/apiProblem'
+
 export type SharedLabels = {
     close: string
     clear: string
@@ -33,14 +36,107 @@ export type SharedLabels = {
     /** Кнопка «глазик» у поля пароля (`PasswordReveal`). */
     showPassword: string
     hidePassword: string
+    /** Спільні слова. */
+    yes: string
+    no: string
+    cancel: string
+    back: string
+    apply: string
+    /** Поле пошуку й пікер із серверним пошуком. */
+    clearSearch: string
+    searching: string
+    searchTruncated: (shown: number, total: number) => string
+    /** Таблиці: лічильники отримують уже відформатовані числа. */
+    tableShown: (loaded: string, total: string) => string
+    tableShownShort: (loaded: string) => string
+    tableLoadingMore: string
+    tableLoadFailed: string
+    /** Рядок фільтрів. */
+    resetFilters: string
+    exportPreparing: string
+    exportDone: (filename: string) => string
+    exportTitle: (from: string, to: string, note?: string) => string
+    /** Поле періоду. */
+    allDates: string
+    periodRemove: string
+    periodWeeksOnly: string
+    periodPickBoth: string
+    /** Локаль `Intl` для підписів періоду: «2–8 лют. 2026». */
+    dateLocale: string
+    /** Суфікс року, який `formatRange` дописує в кінці («р.»), — компактний підпис без нього. */
+    rangeYearSuffix: RegExp
+    weekLabel: (week: number) => string
+    weeksLabel: (first: number, last: number) => string
+    periodPresets: {
+        today: string
+        yesterday: string
+        thisWeek: string
+        prevWeek: string
+        last2Weeks: string
+        last4Weeks: string
+        thisMonth: string
+        prevMonth: string
+        thisQuarter: string
+        prevQuarter: string
+        thisYear: string
+        prevYear: string
+        last30Days: string
+        last90Days: string
+    }
+    /** Місяці: дванадцять назв від січня, називний відмінок. */
+    monthNames: readonly string[]
+    monthShortNames: readonly string[]
+    monthPlaceholder: string
+    allMonths: string
+    /** Сортування: підписи напрямків за родом значення й панель. */
+    sortDirections: {
+        numeric: Record<'asc' | 'desc', string>
+        text: Record<'asc' | 'desc', string>
+        date: Record<'asc' | 'desc', string>
+        group: Record<'asc' | 'desc', string>
+    }
+    sortTitle: string
+    sortEmpty: string
+    sortEmptyShort: string
+    sortReset: string
+    sortRemove: string
+    sortAdd: string
+}
+
+/** Тексти помилок API: логіка в `errors/apiError.helper`, слова й коди в проєкту. */
+export type SharedErrorTexts = {
+    /** Код бека → текст або функція від `meta` цього коду. */
+    codes: Record<string, string | ((meta: any) => string)>
+    /** Запасний варіант, коли коду в словнику немає: за HTTP-статусом (0 — немає звʼязку). */
+    byStatus: Record<number, string>
+    serverError: string
+    timeout: string
+    fallback: string
+    /** Текст запису валідації за його правилом (`meta.rule`). */
+    rule: (entry: ApiProblemEntry) => string
+    /** Показувати `detail` людині, коли коду немає: для бека, що ще не на кодах. За замовчуванням ні. */
+    showDetail?: boolean
+    /** Своє правило «поле бека → поле форми» понад точний збіг, camelCase і `map`. */
+    resolveField?: (path: string, fields: readonly string[]) => string | undefined
+    /** Яких полів стосується запис, якщо не лише `entry.field` (код, що каже про кілька полів у `meta`). */
+    fieldsOf?: (entry: ApiProblemEntry) => readonly string[]
 }
 
 export type SharedConfigValue = {
     labels: SharedLabels
     formatNumber: (value: number) => string
     formatMoney: (value: number) => string
-    /** Сбой фонового действия (`useSharedAsync`): тост или другая поверхность проекта. */
-    handleError: (error: unknown) => void
+    /** Тексти помилок API. */
+    errors: SharedErrorTexts
+    /**
+     * Показати помилку людині: тост, стор сповіщень. `id` склеює однакові,
+     * `isSessionExpired` — привід дати дію «Увійти».
+     */
+    notifyError: (text: string, context: { id: string; isSessionExpired: boolean }) => void
+    /** Посилання для `UiButton`: `RouterLink` + `to` чи Inertia `Link` + `href`. */
+    link: { component: Component; prop: string }
+    /** «Назад» у `UiBackLink`: по історії, а якщо її немає — на `fallback`. Роутер знає проєкт. */
+    goBack: (fallback: string | object) => void
     /** Сбой, который ядро уже показало на месте (список фильтра): только в трекинг. */
     reportError?: (error: unknown) => void
 }
