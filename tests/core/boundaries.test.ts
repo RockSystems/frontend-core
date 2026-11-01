@@ -79,14 +79,15 @@ describe('core boundaries', () => {
   })
 
   it('paints only with project tokens', () => {
-    // Дозволені лише нейтральні тіні, затемнення під модалкою й білий значок на залитій кнопці.
+    // Дозволені лише нейтральні тіні, затемнення під модалкою й білий значок на залитій кнопці
+    // чи на темному тлі переглядача зображень.
     const allowed = /^rgba\((0, 0, 0|15, 20, 30), [\d.]+\)$/
-    const whiteIcon = 'src/components/ui/UiIconButton.vue'
+    const whiteAllowed = ['src/components/ui/UiIconButton.vue', 'src/components/modals/ImageViewerModal.vue']
 
     const offenders = styles.flatMap(({ name, css }) =>
       [...withoutComments(css).matchAll(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)$]*\)/g)]
         .map(match => match[0])
-        .filter(literal => !allowed.test(literal) && !(name === whiteIcon && literal === '#fff'))
+        .filter(literal => !allowed.test(literal) && !(whiteAllowed.includes(name) && literal === '#fff'))
         .map(literal => `${name}: ${literal}`),
     )
 

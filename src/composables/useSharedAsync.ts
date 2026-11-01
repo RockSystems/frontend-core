@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue';
-import { SharedConfig } from '../config'
+import { handleApiError } from '../errors/useHandleError'
 import {MyFunction} from "../types/common";
 
 // Глобальное хранилище состояний для каждой функции
@@ -23,7 +23,6 @@ export function useSharedAsync<T, Args extends any[]>(
 
     // Не null, сверху добавили
     const state = registry.get(asyncFn)!;
-    const { handleError } = SharedConfig.get();
 
     const handle = async (...args: Args): Promise<T | undefined> => {
         // Если запрос уже выполняется - возвращаем существующий Promise
@@ -34,7 +33,7 @@ export function useSharedAsync<T, Args extends any[]>(
         // Создаем запрос и сохраняем его в стейт
         state.activePromise = asyncFn(...args)
             .catch((error) => {
-                handleError(error);
+                handleApiError(error);
                 return undefined;
             })
             .finally(() => {

@@ -210,6 +210,21 @@ export type UntypedModalService = ModalService<Record<string, any>>;
 export const ModalContextKey: InjectionKey<IActiveModal> = Symbol('ModalContext');
 
 /**
+ * Усередині модалки, що не знає свого ключа в реєстрі проєкту (модалки ядра:
+ * `ConfirmModal`, `ImageViewerModal`).
+ */
+export function useCurrentModal<TResult = unknown>() {
+  const context = inject(ModalContextKey, null) as IActiveModal<string, TResult> | null;
+
+  if (!context) throw new Error('useCurrentModal must be called inside the modal component');
+
+  return {
+    resolve: context.resolve.bind(context),
+    close: context.close.bind(context),
+  };
+}
+
+/**
  * «Тут є незбережене» для найближчої модалки: закриття (×, Esc, «Скасувати»)
  * спершу перепитає. Форми `useMyForm` реєструються самі; руками — лише стан
  * поза формою (файли, вибрані рядки). Поза модалкою нічого не робить.
