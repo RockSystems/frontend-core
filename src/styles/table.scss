@@ -1,0 +1,195 @@
+// Глобальний каркас табличної системи `.t` — спільні стилі рядків/комірок, на які
+// спираються дочірні TableHeaderRow / TableBodyRow / TableExpandRow / TableFooterRow
+// (_shared/components/tables).
+//
+// Глобально (імпорт в app.ts), а не в компоненті: non-scoped стиль компонента
+// приїжджає лише з його модулем, і F5 на іншій сторінці лишав таблицю без стилів.
+// Окремі таблиці додають лише своє (обгортка, ширини колонок).
+//
+// NB: змінні $color-* доступні через preprocessorOptions.additionalData (vite.config).
+
+.t {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+
+    td { border-top: 1px solid $color-border; }
+  }
+
+  &__th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $color-muted;
+    background: $color-page-bg;
+    border-bottom: 1px solid $color-border;
+    white-space: nowrap;
+
+    &--toggle { width: 32px; padding: 0; }
+    &--sortable { cursor: pointer; user-select: none; }
+  }
+  &__sort { margin-left: 4px; color: $color-accent; }
+
+  &__row {
+    position: relative;
+    transition: background 0.1s ease;
+
+    &:hover { background: $color-page-bg; }
+
+    &--details {
+      background: $color-page-bg;
+      &:hover { background: $color-page-bg; }
+    }
+
+    &--totals {
+      background: $color-page-bg;
+      border-top: 2px solid $color-border;
+    }
+
+    &--skeleton:hover { background: transparent; }
+  }
+
+  &__td {
+    padding: $table-cell-padding-y $table-cell-padding-x;
+    border-bottom: 1px solid $color-border;
+    vertical-align: middle;
+    font-size: 13px;
+
+    &--toggle { width: 32px; padding: 0 4px; }
+    &--details { padding: 0; }
+  }
+
+  &__cell {
+    position: relative;
+    z-index: 1;
+  }
+
+  // Сам вигляд кнопки дає UiIconButton (variant="ghost"). Тут лише підйом над
+  // фоном комірки, щоб клік не з'їдав ряд-обгортка.
+  &__expand {
+    position: relative;
+    z-index: 1;
+  }
+
+  // Полоса-плейсхолдер внутри ячейки (для initial-skeleton и tfoot-skeleton).
+  &__skeleton-bar {
+    display: inline-block;
+    width: 60%;
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, $color-border 0%, $color-page-bg 50%, $color-border 100%);
+    background-size: 200% 100%;
+    animation: t-skeleton-shimmer 1.4s linear infinite;
+  }
+
+  &__shimmer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+        90deg,
+        rgba($color-accent, .04) 0%,
+        rgba($color-accent, .16) 50%,
+        rgba($color-accent, .04) 100%
+    );
+    background-size: 200% 100%;
+    animation: payroll-shimmer 1.4s linear infinite;
+  }
+
+  @keyframes payroll-shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  @keyframes t-skeleton-shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+}
+
+// Комірки в один рядок: таблиця не рве «Forte K» чи номер навпіл, коли
+// колонки не влазять, — зайве йде в горизонтальний скрол картки.
+//
+// Без min-width: max-content. Для комірки з перенесенням усередині (акаунти,
+// бейджі на flex-wrap) max-content рахується так, ніби все стоїть в один рядок,
+// і колонка роздувалась на ширину, якої на екрані немає.
+.t--nowrap {
+  .t__td { white-space: nowrap; }
+
+  // Розкритий рядок — свій вміст зі своєю версткою, перенос там потрібен.
+  .t__td--details { white-space: normal; }
+}
+
+// Итоговая строка (footer-totals): жирный + табличные цифры.
+.t__row--totals .t__td {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+// Заголовок у два рядки: назва + підказка під нею (напр. «зібрано / внесено»
+// над колонкою з двох чисел). Не flex, а inline-block: тоді обидва рядки
+// підхоплюють text-align комірки (meta.align), а стрілка сортування
+// лишається біля назви, а не біля підказки.
+// Номер ключа в мультисортировке — рядом со стрелкой в шапке.
+.t__sort-prio {
+  margin-left: 1px;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+// Значок «i» біля назви колонки, яка сама себе не пояснює.
+.t__hint {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 3px;
+  color: $color-muted;
+  cursor: help;
+
+  &:hover { color: $color-accent; }
+}
+
+.t__th-stack {
+  display: inline-block;
+  vertical-align: top;
+
+  &__hint {
+    display: block;
+    margin-top: 1px;
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.75;
+  }
+}
+
+// Модифікатори для «плоских» таблиць (без TanStack). Там немає columnDef.meta,
+// через яке TableBodyRow ставить вирівнювання інлайн-стилем, тож класами.
+.t__th--num,
+.t__td--num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.t__td--strong { font-weight: 600; }
+
+// Мінус у розрахунку — не помилка, а утримання: приглушений, не тривожний.
+.t__td--minus { color: $color-muted; }
+
+.t__td--empty {
+  padding: 28px 12px;
+  text-align: center;
+  color: $color-muted;
+}

@@ -1,0 +1,42 @@
+// Контракт ядра: що кожен проєкт зобов'язаний дати через `additionalData`.
+// Значення тут лише для перевірки збірки стилів, реальні кольори задає проєкт.
+// Новий токен у ядрі: додати сюди, у README і в CHANGES.md (це ламає проєкти, отже мажор).
+
+$color-page-bg: #f4f6f9;
+$color-surface: #ffffff;
+$color-border: #d3d8e2;
+$color-border-strong: #858ea3;
+$color-text: #151b2e;
+$color-muted: #525b73;
+
+$color-accent: #25439b;
+$color-accent-dim: #e8edfb;
+$color-accent-ink: #25439b;
+
+$color-green: #1f8a4c;
+$color-green-soft: #e3f6ea;
+$color-green-ink: #1f6b3a;
+$color-danger: #c0392b;
+$color-danger-soft: #fdecea;
+$color-danger-ink: #a93226;
+$color-warning-soft: #fdf0d5;
+$color-warning-ink: #8a5a00;
+$color-neutral-soft: #f0f0f2;
+$color-neutral-ink: #5f636e;
+$color-teal-soft: #e0fff5;
+$color-teal-ink: #0a6b57;
+
+$radius: 8px;
+$anim-small-time: 0.15s;
+$table-cell-padding-x: 12px;
+$table-cell-padding-y: 8px;
+
+@mixin scrollbarStyle($size: 6px) {
+  scrollbar-width: thin;
+}
+
+@mixin bigMobile() {
+  @media (max-width: 768px) {
+    @content;
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "name": "@rocksystems/frontend-core",
+  "version": "1.0.0",
+  "description": "Спільне фронтове ядро Rockwheel, Rockstaff і TIR: API-клієнт, таблиці, форми, модалки, хелпери",
+  "private": true,
+  "type": "module",
+  "files": [
+    "src"
+  ],
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run test"
+  },
+  "peerDependencies": {
+    "@lucide/vue": "^1.57.0",
+    "@tanstack/vue-hotkeys": "0.17.0",
+    "@tanstack/vue-query": "^5.92.9",
+    "@tanstack/vue-table": "^8.21.3",
+    "@vee-validate/zod": "^4.15.1",
+    "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
+    "fuse.js": "^7.5.0",
+    "reka-ui": "^2.6.1",
+    "uuid": "^14.0.0",
+    "vee-validate": "^4.15.1",
+    "vis-data": "^8.0.5",
+    "vis-timeline": "^8.5.4",
+    "vue": "^3.5.13",
+    "zod": "^3.25.76"
+  },
+  "peerDependenciesMeta": {
+    "vis-data": {
+      "optional": true
+    },
+    "vis-timeline": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@lucide/vue": "^1.58.0",
+    "@tanstack/vue-hotkeys": "0.17.0",
+    "@tanstack/vue-query": "^5.104.1",
+    "@tanstack/vue-table": "^8.21.3",
+    "@types/node": "^22.10.0",
+    "@vee-validate/zod": "^4.15.1",
+    "@vue/eslint-config-typescript": "^14.3.0",
+    "axios": "^1.13.4",
+    "dayjs": "^1.11.23",
+    "eslint": "^9.17.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "fuse.js": "^7.5.0",
+    "reka-ui": "^2.11.0",
+    "sass": "^1.83.0",
+    "typescript": "^5.2.2",
+    "typescript-eslint": "^8.23.0",
+    "uuid": "^14.0.3",
+    "vee-validate": "^4.15.1",
+    "vis-data": "^8.0.5",
+    "vis-timeline": "^8.5.4",
+    "vite": "^7.0.4",
+    "vitest": "^3.2.4",
+    "vue": "^3.5.42",
+    "vue-tsc": "^2.2.4",
+    "zod": "^3.25.76"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
