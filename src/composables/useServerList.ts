@@ -93,7 +93,7 @@ type InfiniteListQueryOptions<TResponse> = { queryKey: DataTag<QueryKey, Infinit
 
 /** Як дістати рядки з порції — без адреси й фільтрів. */
 export interface InfiniteRowsConfig<TParams, TResponse, TRow> {
-  /** Нескінченна фабрика з `api/<feature>/*.queries.ts` (`DriversQueries.list` у Rockwheel). */
+  /** Нескінченна фабрика з `api/<feature>/*.queries.ts` (`DriversQueries.list`). */
   query: (params: TParams) => InfiniteListQueryOptions<TResponse>
   enabled?: MaybeRefOrGetter<boolean>
   /** Рядки порції; за замовчуванням `response.data`. */

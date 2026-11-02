@@ -1,13 +1,15 @@
 {
-  "name": "@rocksystems/frontend-core",
-  "version": "2.0.1",
-  "description": "Спільне фронтове ядро Rockwheel, Rockstaff і TIR: API-клієнт, таблиці, форми, модалки, хелпери",
+  "name": "@rock555/frontend-core",
+  "version": "2.0.2",
+  "description": "Спільне фронтове ядро: API-клієнт, таблиці, форми, модалки, хелпери",
+  "license": "UNLICENSED",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RockSystems/frontend-core.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "type": "module",
   "files": [
