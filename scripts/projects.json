@@ -1,0 +1,31 @@
+[
+  {
+    "name": "rockwheel",
+    "repo": "RockSystems/rockwheel",
+    "branch": "develop",
+    "dir": ".",
+    "tsconfig": "tsconfig.json",
+    "sources": "resources/js",
+    "generated": ["routes", "actions", "wayfinder"]
+  },
+  {
+    "name": "rockstaff",
+    "repo": "RockSystems/rockstaff",
+    "branch": "dev",
+    "dir": ".",
+    "tsconfig": "tsconfig.json",
+    "sources": "resources/js",
+    "generated": ["routes", "actions", "wayfinder"]
+  },
+  {
+    "name": "tir",
+    "repo": "RockSystems/TIR",
+    "branch": "develop",
+    "dir": "frontend",
+    "tsconfig": "tsconfig.app.json",
+    "sources": "src",
+    "generated": [],
+    "build": true,
+    "test": "test:unit"
+  }
+]

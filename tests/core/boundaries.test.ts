@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import * as sass from 'sass'
 import { describe, expect, it } from 'vitest'
@@ -44,13 +44,15 @@ function importsOf(text: string): string[] {
     .map(match => match[1] ?? match[2] ?? match[3])
 }
 
-/** Увесь репозиторій: пакет публічний. Крім залежностей і самого цього тесту зі списком заборонених слів. */
-function publicFiles(dir: string = ROOT): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (['node_modules', '.git', 'dist', 'package-lock.json', 'boundaries.test.ts'].includes(entry.name)) return []
-    const path = join(dir, entry.name)
-    return entry.isDirectory() ? publicFiles(path) : [path]
-  })
+/** Те, що йде в публічний пакет: `files` із package.json, сам package.json і README. */
+function publicFiles(): string[] {
+  const { files: published } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { files: string[] }
+
+  return [
+    join(ROOT, 'package.json'),
+    join(ROOT, 'README.md'),
+    ...published.flatMap(entry => (statSync(join(ROOT, entry)).isDirectory() ? walk(join(ROOT, entry)) : [join(ROOT, entry)])),
+  ]
 }
 
 describe('core boundaries', () => {
