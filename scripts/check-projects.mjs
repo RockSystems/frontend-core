@@ -18,8 +18,11 @@ const projects = JSON.parse(readFileSync(join(import.meta.dirname, 'projects.jso
 const only = process.argv.slice(2)
 const hide = text => (TOKEN ? text.replaceAll(TOKEN, '***') : text)
 
+// Токен не потрібен нічому, крім клонування, а в проєктах виконуються чужі postinstall-скрипти залежностей.
+const { PROJECTS_READ_TOKEN: _token, ...envWithoutToken } = process.env
+
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: 'utf8', shell: process.platform === 'win32', maxBuffer: 64 * 1024 * 1024 })
+  const result = spawnSync(command, args, { cwd, env: envWithoutToken, encoding: 'utf8', shell: process.platform === 'win32', maxBuffer: 64 * 1024 * 1024 })
   const output = hide(`${result.stdout ?? ''}${result.stderr ?? ''}`).replace(/\x1b\[[0-9;]*[mA-Z]/g, '')
 
   return { ok: result.status === 0, output }
@@ -42,6 +45,8 @@ function checkProject(project, tarball, work) {
   const host = TOKEN ? `x-access-token:${TOKEN}@github.com` : 'github.com'
   const clone = run('git', ['clone', '--quiet', '--depth', '1', '--branch', project.branch, `https://${host}/${project.repo}.git`, dir], work)
   if (!clone.ok) return [`не вдалося клонувати:\n${tail(clone.output, 3)}`]
+  // З .git/config токен теж прибираємо: туди дотягнувся б той самий postinstall.
+  run('git', ['remote', 'set-url', 'origin', `https://github.com/${project.repo}.git`], dir)
 
   const app = join(dir, project.dir)
   const problems = []
