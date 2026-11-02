@@ -25,7 +25,7 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <SmartField v-slot="{ field, inputId }" :name="name" :label="label" :hint="hint" :is-required="isRequired">
-    <textarea :id="inputId" v-bind="{ ...field, ...$attrs }" :rows="rows" :placeholder="placeholder" />
+  <SmartField v-slot="{ field }" :name="name" :label="label" :hint="hint" :is-required="isRequired">
+    <textarea v-bind="{ ...field, ...$attrs }" :rows="rows" :placeholder="placeholder" />
   </SmartField>
 </template>

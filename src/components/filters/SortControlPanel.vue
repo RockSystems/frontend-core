@@ -211,7 +211,7 @@ function remove(by: TBy): void {
     &:hover { color: $color-text; }
 
     &--on {
-      background: $color-accent;
+      background: $color-accent-ink;
       color: $color-surface;
     }
   }

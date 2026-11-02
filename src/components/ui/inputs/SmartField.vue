@@ -17,6 +17,7 @@ defineProps<{
   isRequired?: boolean
 }>();
 
+// id едет прямо в `field`: кто делает v-bind="field", тот уже связан с подписью.
 // Поле, которое ставит себе :id="inputId" из слота, получает связь с подписью:
 // клик по ней ставит фокус, читалка экрана называет поле.
 const inputId = useId();
@@ -44,7 +45,7 @@ const inputId = useId();
           <span class="smart-field__tip">{{ hint }}</span>
         </button>
       </span>
-      <slot v-bind="vee" :input-id="inputId"></slot>
+      <slot v-bind="vee" :field="{ ...vee.field, id: inputId }" :input-id="inputId"></slot>
       <span class="ui-errors" v-if="vee.errors.length">
         <span class="ui-error" v-for="err in vee.errors" :key="err">
           {{ err }}
@@ -59,6 +60,19 @@ const inputId = useId();
 
 // Глобальные стили полей формы. SmartField — единственная обёртка инпутов,
 // поэтому стили инпутов живут здесь (а не в каждой модалке/фильтре).
+// Поза .smart-field: радіо й діапазон дат малюють помилки самі, без цієї обгортки.
+.ui-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ui-error {
+  font-size: 12px;
+  line-height: 1.3;
+  color: $color-danger;
+}
+
 .smart-field {
   display: flex;
   flex-direction: column;
@@ -150,18 +164,6 @@ const inputId = useId();
     min-height: 60px;
   }
 
-  // Помилки валідації — завжди червоні (єдина обгортка інпутів = на весь проєкт).
-  .ui-errors {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .ui-error {
-    font-size: 12px;
-    line-height: 1.3;
-    color: $color-danger;
-  }
 
   // Поле з помилкою — червона рамка (поки помилка присутня у DOM).
   &:has(.ui-errors) {

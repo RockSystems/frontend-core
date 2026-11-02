@@ -2,6 +2,7 @@
 // проект передаёт один раз при старте — `SharedConfig.configure(...)` до монтирования.
 
 import type { Component } from 'vue'
+import type { Period } from './helpers/period.helper'
 import type { ApiProblemEntry } from './api/errors/apiProblem'
 
 export type SharedLabels = {
@@ -55,7 +56,7 @@ export type SharedLabels = {
     resetFilters: string
     exportPreparing: string
     exportDone: (filename: string) => string
-    exportTitle: (from: string, to: string, note?: string) => string
+    exportTitle: (format: string, period?: Period, note?: string) => string
     /** Поле періоду. */
     allDates: string
     periodRemove: string

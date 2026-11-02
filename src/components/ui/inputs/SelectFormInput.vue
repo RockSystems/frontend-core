@@ -15,10 +15,9 @@ defineProps<{
       :name="name"
       :label="label"
       :is-required="isRequired"
-      v-slot="{field, handleChange, inputId}"
+      v-slot="{ field, handleChange }"
   >
     <select
-        :id="inputId"
         v-bind="field"
         @change="(e) => {
           const val = (e.target as HTMLSelectElement).value;

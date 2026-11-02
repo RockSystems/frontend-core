@@ -9,6 +9,8 @@ export interface UiKpiCardItem {
   key: string
   icon: Component
   label: string
+  /** Підказка при наведенні на підпис: пояснює те, що в ньому скорочено. */
+  labelHint?: string
   /** null = даних ще нема → замість числа скелетон. */
   value: string | null
   /** Дрібна приписка праворуч від значення через крапку (напр. частка палива «12,3%»). */

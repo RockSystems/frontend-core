@@ -42,7 +42,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
   user-select: none;
   transition: all 0.15s ease;
 
-  &:hover { border-color: $color-border-strong; }
+  &:hover:not(&--active) { border-color: $color-border-strong; }
 
   // Не display:none — інпут випав би з таб-порядку й перестав ловити пробіл.
   &__input {

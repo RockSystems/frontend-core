@@ -22,7 +22,7 @@ withDefaults(defineProps<{
         <div v-else class="ui-kpi__value" :class="card.tone && `ui-kpi__value--${card.tone}`">
           {{ card.value }}<span v-if="card.note" class="ui-kpi__note"><span class="ui-kpi__note-dot">·</span>{{ card.note }}</span>
         </div>
-        <div class="ui-kpi__label">
+        <div class="ui-kpi__label" :title="card.labelHint">
           {{ card.label }}
           <!-- Для позначок біля підпису (напр. «комісія попередня»). -->
           <slot name="suffix" :card="card" />
@@ -68,6 +68,8 @@ withDefaults(defineProps<{
   }
 
   &__body {
+    // Довгий підпис переноситься, а числа сусідніх карток лишаються в одну лінію.
+    align-self: flex-start;
     display: flex;
     flex-direction: column;
     gap: 2px;

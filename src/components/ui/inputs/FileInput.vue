@@ -98,6 +98,11 @@ const onDragOver = (val: boolean) => isDragging.value = val;
         z-index: -1;
     }
 
+    &__input:focus-visible + &__label {
+        outline: 2px solid $color-accent;
+        outline-offset: 2px;
+    }
+
     &__label {
         display: flex;
         align-items: center;

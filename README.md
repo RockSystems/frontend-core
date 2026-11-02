@@ -9,7 +9,7 @@
 Публічний пакет на npmjs.com, токен для встановлення не потрібен. У `package.json`:
 
 ```json
-"@rock555/frontend-core": "^2.0.2"
+"@rock555/frontend-core": "^3.0.0"
 ```
 
 Імпорти `@/_shared/...` міняти не треба, досить аліаса. У `vite.config`:
@@ -37,7 +37,7 @@ optimizeDeps: { exclude: ['@/_shared'] },
 
 Свою копію `types/table.d.ts` прибрати: типи колонок ядро підключає само.
 
-Залежності ядра (`peerDependencies`) ставить сам проєкт. Необов'язкові: `vis-data` і `vis-timeline` для `TimelineChart`, `vue-sonner` для `ExportCsvButton`, `motion-v` для `SortControlPanel`.
+Залежності ядра (`peerDependencies`) ставить сам проєкт. Необов'язкові: `vis-data` і `vis-timeline` для `TimelineChart`, `vue-sonner` для `ExportButton`, `motion-v` для `SortControlPanel`.
 
 Підключати конфіг так, щоб `SharedConfig.configure()` спрацював до першого рендера. На рівні модуля читати тексти не можна, це перевіряє `tests/core/config-timing.test.ts`.
 

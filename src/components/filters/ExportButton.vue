@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Кнопка вивантаження CSV у рядку фільтрів (слот #toolbar у FiltersBar).
+// Кнопка вивантаження файла у рядку фільтрів (слот #toolbar у FiltersBar).
 //
 // Тримає всю взаємодію разом: спінер, підпис із періодом і тост про хід справи.
 // Фіча дає лише «що запустити» — інакше кожна сторінка заводила б свій
@@ -13,21 +13,23 @@ import UiButton from '../ui/UiButton.vue'
 
 const labels = SharedConfig.get().labels
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   // Запускає вивантаження і віддає імʼя файла, під яким його збережено.
   run: () => Promise<string>
   isExporting: boolean
-  // Тільки для підпису — щоб було видно, за що саме поїде файл.
-  period: Period
+  format?: 'CSV' | 'XLSX'
+  // Тільки для підпису — щоб було видно, за що саме поїде файл. Список без
+  // дат періоду не має.
+  period?: Period
   // Чим файл відрізняється від екрана, якщо відрізняється (напр. розріз).
   note?: string
-}>()
+}>(), { format: 'CSV' })
 
 // Один тост на весь шлях: вивантаження за великий період довге.
 //
 // `error` навмисно не заданий — помилку вже показує onError мутації, а без
 // цього ключа sonner просто прибирає тост замість того, щоб дублювати її другим.
-function exportCsv(): void {
+function exportFile(): void {
   toast.promise(props.run(), {
     loading: labels.exportPreparing,
     success: (filename: string) => labels.exportDone(filename),
@@ -40,21 +42,21 @@ function exportCsv(): void {
     variant="ghost"
     size="sm"
     :disabled="isExporting"
-    :title="labels.exportTitle(period.from, period.to, note)"
-    @click="exportCsv"
+    :title="labels.exportTitle(format, period, note)"
+    @click="exportFile"
   >
     <component
       :is="isExporting ? Loader2 : Download"
       :size="14"
-      :class="{ 'export-csv__spin': isExporting }"
+      :class="{ 'export-button__spin': isExporting }"
     />
-    Export CSV
+    Export {{ format }}
   </UiButton>
 </template>
 
 <style scoped lang="scss">
 // Слот-контент належить ЦЬОМУ компоненту, тож анімація живе тут, а не в
 // фільтрах, які його показують.
-.export-csv__spin { animation: export-csv-spin 1s linear infinite; }
-@keyframes export-csv-spin { to { transform: rotate(360deg); } }
+.export-button__spin { animation: export-button-spin 1s linear infinite; }
+@keyframes export-button-spin { to { transform: rotate(360deg); } }
 </style>
