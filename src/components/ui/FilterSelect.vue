@@ -316,6 +316,8 @@ function onSelect(value: unknown): void {
       background: $color-accent-dim;
       border-color: $color-accent;
       color: $color-accent-ink;
+
+      &:hover:not(:disabled) { border-color: $color-accent; }
     }
   }
 

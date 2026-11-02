@@ -24,10 +24,10 @@ const labels = SharedConfig.get().labels
       :name="name"
       :label="label"
       :is-required="isRequired"
-      v-slot="{ field, handleChange, inputId }"
+      v-slot="{ field, handleChange }"
   >
     <span class="date-input">
-      <input :id="inputId" class="date-input__field" type="date" :min="min" :max="max" v-bind="field"/>
+      <input class="date-input__field" type="date" :min="min" :max="max" v-bind="field"/>
       <button
           v-if="clearable && field.value"
           type="button"

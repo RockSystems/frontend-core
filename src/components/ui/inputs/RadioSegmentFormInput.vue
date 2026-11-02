@@ -137,7 +137,6 @@ const uid = useId();
     border-color: $color-accent;
     background: $color-accent-dim;
     color: $color-accent-ink;
-    font-weight: 600;
   }
 }
 </style>
