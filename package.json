@@ -1,6 +1,6 @@
 {
   "name": "@rock555/frontend-core",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Спільне фронтове ядро: API-клієнт, таблиці, форми, модалки, хелпери",
   "license": "UNLICENSED",
   "repository": {
@@ -13,16 +13,23 @@
   },
   "type": "module",
   "files": [
-    "src"
+    "src",
+    "vite-plugin.js",
+    "vite-plugin.d.ts"
   ],
   "exports": {
+    "./vite": {
+      "types": "./vite-plugin.d.ts",
+      "default": "./vite-plugin.js"
+    },
     "./*": "./src/*"
   },
   "scripts": {
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "check:projects": "node scripts/check-projects.mjs"
   },
   "peerDependencies": {
     "@internationalized/date": "^3.11.0",

@@ -1,14 +1,15 @@
 name: Release
 
-# Тег v* → нова версія пакета на npmjs.com. Токена немає: npm довіряє саме цьому файлу через trusted publishing.
+# Вливання в main з новою version у package.json → пакет на npmjs.com і тег v…. Руками нічого не ставимо.
+# Токена немає: npm довіряє саме цьому файлу через trusted publishing, тож ім'я файла не міняємо.
 # Дії закріплені за комітом: цей файл публікує код у всі проєкти.
 on:
   push:
-    tags: ['v*']
+    branches: [main]
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 jobs:
   publish:
@@ -20,8 +21,26 @@ jobs:
           node-version: '24'
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+      - name: Чи є що публікувати
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NAME=$(node -p "require('./package.json').name")
+          if [ -n "$(npm view "$NAME@$VERSION" version 2>/dev/null || true)" ]; then
+            echo "Версія $VERSION уже опублікована, нічого робити."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          fi
       - run: npm ci
+        if: steps.version.outputs.publish == 'true'
       - run: npm run check
-      - name: Тег збігається з версією
-        run: test "${GITHUB_REF_NAME}" = "v$(node -p "require('./package.json').version")"
+        if: steps.version.outputs.publish == 'true'
       - run: npm publish
+        if: steps.version.outputs.publish == 'true'
+      - name: Тег версії
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"

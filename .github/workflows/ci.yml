@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -18,3 +20,25 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test
+      - name: Нова версія, якщо змінився код пакета
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-version.mjs origin/${{ github.base_ref }}
+
+  # Ставить правку в чисті копії проєктів. Без секрету лише попереджає: перевірка можлива й локально.
+  projects:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      PROJECTS_READ_TOKEN: ${{ secrets.PROJECTS_READ_TOKEN }}
+    steps:
+      - name: Секрету немає
+        if: env.PROJECTS_READ_TOKEN == ''
+        run: echo "::warning::PROJECTS_READ_TOKEN не заданий, проєкти не перевірено. Локально це npm run check:projects"
+      - uses: actions/checkout@v4
+        if: env.PROJECTS_READ_TOKEN != ''
+      - uses: actions/setup-node@v4
+        if: env.PROJECTS_READ_TOKEN != ''
+        with:
+          node-version: '24'
+      - run: npm run check:projects
+        if: env.PROJECTS_READ_TOKEN != ''
