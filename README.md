@@ -34,7 +34,9 @@ resolve: {
     '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
   },
   dedupe: ['vue'],
-}
+},
+// Без цього dev-сервер збирає ядро окремою копією, і застосунок падає на старті.
+optimizeDeps: { exclude: ['@/_shared'] },
 ```
 
 Аліас `@/_shared` має стояти раніше за `@`. У `tsconfig.json`:
