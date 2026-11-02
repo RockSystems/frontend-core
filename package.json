@@ -1,6 +1,6 @@
 {
   "name": "@rocksystems/frontend-core",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Спільне фронтове ядро Rockwheel, Rockstaff і TIR: API-клієнт, таблиці, форми, модалки, хелпери",
   "repository": {
     "type": "git",

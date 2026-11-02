@@ -46,7 +46,7 @@ resolve: {
 }
 ```
 
-Також додати в `include` файл `node_modules/@rocksystems/frontend-core/src/types/table.d.ts`, а свою копію `types/table.d.ts` прибрати.
+Свою копію `types/table.d.ts` прибрати: типи колонок ядро підключає само.
 
 Залежності ядра (`peerDependencies`) ставить сам проєкт. Необов'язкові: `vis-data` і `vis-timeline` для `TimelineChart`, `vue-sonner` для `ExportCsvButton`, `motion-v` для `SortControlPanel`.
 
