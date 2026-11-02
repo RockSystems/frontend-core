@@ -10,6 +10,7 @@
 //
 // Стили задаёт окружающая таблица (классы .t__th, .t__td, .t__row--totals).
 
+import type {} from '../../types/table'
 import { FlexRender, Header, type HeaderGroup } from '@tanstack/vue-table'
 
 interface Props {

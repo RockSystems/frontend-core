@@ -1,3 +1,4 @@
+import type {} from '../types/table'
 import { type CellContext, type ColumnDef, createColumnHelper, type DisplayColumnDef } from '@tanstack/vue-table'
 import { Component, h, type VNode, VNodeChild } from 'vue'
 import AmountCell from '../components/tables/cells/AmountCell.vue'

@@ -78,6 +78,16 @@ describe('core boundaries', () => {
     expect(offenders).toEqual([])
   })
 
+  it('table components bring their column types along', () => {
+    // Інакше типи є лише там, де проєкт сам додав table.d.ts у tsconfig, а `exclude: node_modules` його відкидає.
+    const offenders = sources
+      .filter(({ text }) => /columnDef\.meta|\.meta\?\.(align|hint|emphasis)/.test(text))
+      .filter(({ text }) => !text.includes("from '../../types/table'"))
+      .map(({ name }) => name)
+
+    expect(offenders).toEqual([])
+  })
+
   it('paints only with project tokens', () => {
     // Дозволені лише нейтральні тіні, затемнення під модалкою й білий значок на залитій кнопці
     // чи на темному тлі переглядача зображень.

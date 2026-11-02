@@ -11,6 +11,7 @@
 //
 // Cтили задаёт окружающая таблица через классы .t__th, .t__sort и т.п.
 
+import type {} from '../../types/table'
 import { Info } from '@lucide/vue'
 import { FlexRender, type HeaderGroup } from '@tanstack/vue-table'
 

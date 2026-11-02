@@ -7,6 +7,7 @@
 // Живёт в _shared, потому что блок был скопирован в три таблицы (статистика,
 // звіти, машини) — правка выравнивания в одной копии разъехалась бы с остальными.
 
+import type {} from '../../types/table'
 import type { Column } from '@tanstack/vue-table'
 
 interface Props {

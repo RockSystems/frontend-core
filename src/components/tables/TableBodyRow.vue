@@ -1,4 +1,5 @@
 <script setup lang="ts"  generic="T">
+import type {} from '../../types/table'
 import { FlexRender } from '@tanstack/vue-table'
 import { type Row } from '@tanstack/vue-table'
 import { ChevronDown, ChevronRight } from '@lucide/vue'
