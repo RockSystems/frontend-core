@@ -44,6 +44,15 @@ function importsOf(text: string): string[] {
     .map(match => match[1] ?? match[2] ?? match[3])
 }
 
+/** Увесь репозиторій: пакет публічний. Крім залежностей і самого цього тесту зі списком заборонених слів. */
+function publicFiles(dir: string = ROOT): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (['node_modules', '.git', 'dist', 'package-lock.json', 'boundaries.test.ts'].includes(entry.name)) return []
+    const path = join(dir, entry.name)
+    return entry.isDirectory() ? publicFiles(path) : [path]
+  })
+}
+
 describe('core boundaries', () => {
   it('has sources to check', () => {
     expect(sources.length).toBeGreaterThan(50)
@@ -58,6 +67,25 @@ describe('core boundaries', () => {
     )
 
     expect(offenders, 'Перенесіть текст у SharedConfig.labels (src/config.ts)').toEqual([])
+  })
+
+  it('keeps private things out of the public package', () => {
+    const forbidden = [
+      /ghp_\w{20,}|gho_\w{20,}|github_pat_\w{20,}|npm_[A-Za-z0-9]{30,}|sk-[\w-]{20,}|AKIA[0-9A-Z]{16}/,
+      /-----BEGIN [A-Z ]*PRIVATE KEY/,
+      /sslip\.io|\b(?:\d{1,3}\.){3}\d{1,3}\b/,
+      /\b[\w.+-]+@[\w-]+\.[a-z]{2,}\b/,
+      /rockwheel|rockstaff|rocktir/i,
+      /\bTIR\b/,
+    ]
+
+    const offenders = publicFiles().flatMap(file =>
+      readFileSync(file, 'utf8').split('\n').flatMap((line, index) =>
+        forbidden.some(pattern => pattern.test(line)) ? [`${relative(ROOT, file).replaceAll('\\', '/')}:${index + 1}`] : [],
+      ),
+    )
+
+    expect(offenders, 'Пакет публічний: приберіть це, а секрет одразу відкличте').toEqual([])
   })
 
   it('imports only itself by relative path and declared peer dependencies', () => {

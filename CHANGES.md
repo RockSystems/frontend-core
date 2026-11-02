@@ -1,6 +1,11 @@
 # Зміни
 
-Формат і правила версій: [README](README.md#як-змінювати-ядро). Журнал синків до появи цього репозиторію: [docs/history-before-1.0.md](docs/history-before-1.0.md).
+Формат і правила версій: [README](README.md#як-змінювати-ядро).
+
+## 2.0.2
+
+- **Пакет переїхав на npmjs.com як `@rock555/frontend-core`, токен для встановлення більше не потрібен.** Код той самий, що у 2.0.1. Проєкту: замінити назву пакета в `package.json`, `vite.config` і `tsconfig`, видалити `.npmrc` і секрет `npm_token` зі збірки.
+- Новий тест не пропускає в репозиторій і пакет секрети, адреси серверів, пошту й назви проєктів.
 
 ## 2.0.1
 
@@ -28,10 +33,10 @@
 
 **Що зібрано з різних проєктів**
 
-- `DateRangeField` і `FiltersBar`: період можна зняти (`isClearable`, `isPeriodClearable`) з Rockstaff.
-- `useAppForm`: повторний Enter під час запиту не шле другий, `useAppFieldArray`, тихе `ActionCancelledError` з TIR. Роздача помилок по полях з Rockwheel.
-- `useHandleError`: однакові помилки склеюються в один тост (TIR). 419 теж вважається завершеною сесією.
-- `ApiErrorHelper`: прикладний код важливіший за запис валідації, навіть якщо стоїть не першим (TIR). `errors.resolveField` і `errors.fieldsOf` для проєктних правил полів.
+- `DateRangeField` і `FiltersBar`: період можна зняти (`isClearable`, `isPeriodClearable`).
+- `useAppForm`: повторний Enter під час запиту не шле другий, `useAppFieldArray`, тихе `ActionCancelledError`, роздача помилок по полях.
+- `useHandleError`: однакові помилки склеюються в один тост. 419 теж вважається завершеною сесією.
+- `ApiErrorHelper`: прикладний код важливіший за запис валідації, навіть якщо стоїть не першим. `errors.resolveField` і `errors.fieldsOf` для проєктних правил полів.
 - `useServerList`: `total` за замовчуванням із `meta.total` або `total`.
 
 **Чого свідомо ще немає в ядрі**
@@ -42,9 +47,9 @@
 
 ## 1.0.0
 
-Ядро винесено з Rockwheel в окремий репозиторій. Код той самий, що в `resources/js/_shared` після Rockwheel PR 255 і 270.
+Ядро винесено в окремий репозиторій.
 
-Проти копій, що зараз лежать у Rockstaff і TIR:
+Проти попередніх копій у проєктах:
 
 - **Новий тип `Paged<T>`** (`{ data, meta: Pagination }`) в `api/types.ts`: сторінка списку.
 - **Видалено `PaginatedResponse3`**: його ніхто не використовує.

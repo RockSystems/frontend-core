@@ -1,36 +1,23 @@
 # frontend-core
 
-Спільне фронтове ядро Rockwheel, Rockstaff і TIR: API-клієнт і обробка помилок, списки й таблиці, форми, модалки, фільтри, кнопки, хелпери. Тільки фронт: Vue, TypeScript, SCSS. PHP тут немає.
+Спільне фронтове ядро кількох проєктів: API-клієнт і обробка помилок, списки й таблиці, форми, модалки, фільтри, кнопки, хелпери. Тільки фронт: Vue, TypeScript, SCSS. PHP тут немає.
 
 Ядро не знає проєктів: ні їхньої мови, ні кольорів, ні структури папок. Усе проєктне приходить через `SharedConfig` і токени стилів.
 
 ## Підключення в проєкт
 
-Приватний npm-пакет у GitHub Packages. У `package.json`:
+Публічний пакет на npmjs.com, токен для встановлення не потрібен. У `package.json`:
 
 ```json
-"@rocksystems/frontend-core": "^2.0.0"
+"@rock555/frontend-core": "^2.0.2"
 ```
-
-Поруч із `package.json` файл `.npmrc`, сам токен у нього не пишемо:
-
-```
-@rocksystems:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
-```
-
-Токен один: GitHub classic token з правом `read:packages`, у змінній `NPM_TOKEN` усюди, де виконується `npm ci`:
-
-- локально: змінна середовища розробника;
-- GitHub Actions: секрет `NPM_TOKEN`;
-- Docker: секрет збірки `npm_token`, у Dokploy змінна `NPM_TOKEN` проєкту. У Dockerfile `RUN --mount=type=secret,id=npm_token,env=NPM_TOKEN npm ci`, тож токен не лишається в образі.
 
 Імпорти `@/_shared/...` міняти не треба, досить аліаса. У `vite.config`:
 
 ```ts
 resolve: {
   alias: {
-    '@/_shared': fileURLToPath(new URL('./node_modules/@rocksystems/frontend-core/src', import.meta.url)),
+    '@/_shared': fileURLToPath(new URL('./node_modules/@rock555/frontend-core/src', import.meta.url)),
     '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
   },
   dedupe: ['vue'],
@@ -43,7 +30,7 @@ optimizeDeps: { exclude: ['@/_shared'] },
 
 ```json
 "paths": {
-  "@/_shared/*": ["./node_modules/@rocksystems/frontend-core/src/*"],
+  "@/_shared/*": ["./node_modules/@rock555/frontend-core/src/*"],
   "@/*": ["./resources/js/*"]
 }
 ```
@@ -84,7 +71,7 @@ optimizeDeps: { exclude: ['@/_shared'] },
 
 1. Правка йде PR-ом сюди, а не в папку проєкту. Перевірити її в себе: `npm link` або `"file:../frontend-core"` замість версії, у PR проєкту це не потрапляє.
 2. CI ганяє типи, лінт і межі ядра. Локально те саме: `npm run check`.
-3. Після вливання піднімаємо `version` у `package.json`, пишемо в [CHANGES.md](CHANGES.md) і ставимо тег `v…`: CI сам публікує пакет.
+3. Після вливання піднімаємо `version` у `package.json`, пишемо в [CHANGES.md](CHANGES.md) і ставимо тег `v…`: CI сам публікує пакет через trusted publishing, без токена.
    - патч `1.0.1`: виправлення, проєктам нічого робити не треба;
    - мінор `1.1.0`: нова можливість, зі значенням за замовчуванням, старе працює як було;
    - мажор `2.0.0`: ламає проєкти (новий обов'язковий токен чи підпис, видалення, зміна поведінки), у `CHANGES.md` пишемо, що зробити проєкту.
@@ -92,7 +79,7 @@ optimizeDeps: { exclude: ['@/_shared'] },
 
 ## Як оновлення доходить до проєктів
 
-Само нічого не приїде: версія зафіксована в `package-lock.json` проєкту. Коли виходить нова версія, бот (Dependabot або Renovate) відкриває в кожному проєкті PR на неї, тож про оновлення ніхто не забуде. Вручну: `npm install @rocksystems/frontend-core@latest`.
+Само нічого не приїде: версія зафіксована в `package-lock.json` проєкту. Коли виходить нова версія, бот (Dependabot або Renovate) відкриває в кожному проєкті PR на неї, тож про оновлення ніхто не забуде. Вручну: `npm install @rock555/frontend-core@latest`.
 
 Відставати на мажор і більше дуже небажано, хоч і не заборонено: чим більший розрив, тим дорожче потім наздоганяти.
 
@@ -104,4 +91,5 @@ optimizeDeps: { exclude: ['@/_shared'] },
 - імпорти `@/` і вихід за межі `src`;
 - пакети, яких немає в `peerDependencies`;
 - кольори літералами, дозволені лише нейтральні тіні, затемнення під модалкою й білий значок на залитій кнопці;
-- стилі, що беруть щось поза контрактом токенів.
+- стилі, що беруть щось поза контрактом токенів;
+- те, що не можна показувати: пакет публічний, тож ні секретів, ні адрес серверів, ні пошти, ні назв проєктів, ні бізнес-логіки. Версію вже могли скачати, тож назад це не забрати.
