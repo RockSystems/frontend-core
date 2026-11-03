@@ -20,10 +20,15 @@ withDefaults(defineProps<{
       <div class="ui-kpi__body">
         <span v-if="card.value === null" class="ui-kpi__skeleton" />
         <div v-else class="ui-kpi__value" :class="card.tone && `ui-kpi__value--${card.tone}`">
-          {{ card.value }}<span v-if="card.note" class="ui-kpi__note"><span class="ui-kpi__note-dot">·</span>{{ card.note }}</span>
+          {{ card.value }}
         </div>
         <div class="ui-kpi__label" :title="card.labelHint">
           {{ card.label }}
+          <!-- Приписка — у рядку підпису, не біля числа: там вона з'їдала місце
+               суми, і замість частки лишалось «…». -->
+          <template v-if="card.note">
+            <span>·</span><span class="ui-kpi__note">{{ card.note }}</span>
+          </template>
           <!-- Для позначок біля підпису (напр. «комісія попередня»). -->
           <slot name="suffix" :card="card" />
         </div>
@@ -36,8 +41,9 @@ withDefaults(defineProps<{
 .ui-kpi {
   display: grid;
   // auto-fit + minmax = рівно стільки колонок, скільки влазить. Медіазапити
-  // під кожну кількість карток не потрібні.
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  // під кожну кількість карток не потрібні. 200px — щоб «100 000 000,00 ₴»
+  // вміщалась повним шрифтом.
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 8px;
 
   &__card {
@@ -73,11 +79,16 @@ withDefaults(defineProps<{
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
     min-width: 0;
+    // Шрифт числа рахується від ширини картки (cqi), а не від самого числа.
+    container-type: inline-size;
   }
 
   &__value {
-    font-size: 16px;
+    // Велика сума у вузькій картці не обрізається, а дрібнішає: при 11.5cqi
+    // «999 999 999,99 ₴» якраз займає всю ширину. Ширша картка — звичайні 16px.
+    font-size: min(16px, 11.5cqi);
     font-weight: 700;
     color: $color-text;
     line-height: 1.15;
@@ -91,22 +102,19 @@ withDefaults(defineProps<{
     &--muted    { color: $color-muted; }
   }
 
-  // Приписка (частка): помітно дрібніша за число, звичайного кольору. Крапка з
-  // повітрям з обох боків, щоб не злипалося з числом.
+  // Приписка (частка) у рядку підпису: кольором тексту, щоб читалась як
+  // значення, а не як продовження підпису.
   &__note {
-    font-size: 0.8em;
     font-weight: 600;
+    color: $color-text;
   }
 
-  &__note-dot {
-    margin: 0 6px 0 7px;
-    color: $color-muted;
-  }
-
+  // Довгий підпис з припискою переноситься цілими шматками, а не обрізається.
   &__label {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 4px;
+    gap: 0 4px;
     font-size: 11px;
     color: $color-muted;
   }
@@ -127,7 +135,7 @@ withDefaults(defineProps<{
     .ui-kpi__card { gap: 12px; padding: 14px 16px; border-radius: 12px; }
     .ui-kpi__icon { width: 36px; height: 36px; border-radius: 10px; }
     .ui-kpi__body { gap: 4px; }
-    .ui-kpi__value { font-size: 22px; line-height: 1.1; }
+    .ui-kpi__value { font-size: min(22px, 11.5cqi); line-height: 1.1; }
     .ui-kpi__label { font-size: 12px; }
     .ui-kpi__skeleton { width: 72px; height: 22px; border-radius: 6px; }
   }
