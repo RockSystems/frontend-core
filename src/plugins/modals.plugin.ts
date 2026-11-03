@@ -82,7 +82,7 @@ export class ModalsHelper {
       }
 
       get id() {
-        return `${String(this.name)}-${this.uid}}`;
+        return `${String(this.name)}-${this.uid}`;
       }
 
       public onResolve: ((val: any) => void) | null = null;

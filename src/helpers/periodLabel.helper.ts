@@ -17,10 +17,13 @@ export class PeriodLabelHelper {
   private static rangeFormat: Intl.DateTimeFormat | null = null
 
   private static format(): Intl.DateTimeFormat {
+    // timeZone UTC: `new Date('2026-02-02')` — північ UTC, і в поясі західніше UTC
+    // підпис без нього з'їжджав на день назад.
     PeriodLabelHelper.rangeFormat ??= new Intl.DateTimeFormat(SharedConfig.get().labels.dateLocale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
+      timeZone: 'UTC',
     })
 
     return PeriodLabelHelper.rangeFormat
