@@ -171,9 +171,10 @@ export function useInfiniteRows<TParams, TResponse, TRow = RowOf<TResponse>>(
 
   // «Без id — rowId обовʼязковий» умовним типом не виразити: TS тоді губить вивід
   // відповіді з лямбди-фабрики. Тож перевірка тут, і гучна: тихо злиті в один
-  // рядок порції виглядали б як «дані зникли».
+  // рядок порції виглядали б як «дані зникли». Числовий id (автоінкремент) — теж id.
   const idOf = (row: TRow): string => {
     const id = config.rowId ? config.rowId(row) : (row as { id?: unknown }).id
+    if (typeof id === 'number' && Number.isFinite(id)) return String(id)
     if (typeof id !== 'string') throw new Error('useInfiniteRows: row has no id, pass rowId')
     return id
   }

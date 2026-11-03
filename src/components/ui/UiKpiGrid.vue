@@ -26,9 +26,9 @@ withDefaults(defineProps<{
           {{ card.label }}
           <!-- Приписка — у рядку підпису, не біля числа: там вона з'їдала місце
                суми, і замість частки лишалось «…». -->
-          <template v-if="card.note">
-            <span>·</span><span class="ui-kpi__note">{{ card.note }}</span>
-          </template>
+          <!-- Крапка з припискою одним шматком: при переносі вона не лишається
+               в кінці рядка без значення. -->
+          <span v-if="card.note" class="ui-kpi__note-group">·&nbsp;<span class="ui-kpi__note">{{ card.note }}</span></span>
           <!-- Для позначок біля підпису (напр. «комісія попередня»). -->
           <slot name="suffix" :card="card" />
         </div>
@@ -107,6 +107,10 @@ withDefaults(defineProps<{
   &__note {
     font-weight: 600;
     color: $color-text;
+  }
+
+  &__note-group {
+    white-space: nowrap;
   }
 
   // Довгий підпис з припискою переноситься цілими шматками, а не обрізається.

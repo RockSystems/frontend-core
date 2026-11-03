@@ -37,8 +37,11 @@ const onDragOver = (val: boolean) => isDragging.value = val;
                 :accept="accept"
                 class="file-field__input"
                 @change="(e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  handleChange(file);
+                  const input = e.target as HTMLInputElement;
+                  handleChange(input.files?.[0]);
+                  // Файл уже у формі. Без скидання той самий файл після «Прибрати»
+                  // вибрати знову не вийшло б: значення не змінилось — change немає.
+                  input.value = '';
                 }"
             />
 

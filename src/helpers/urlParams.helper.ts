@@ -19,18 +19,26 @@ export class UrlParamsHelper {
   // Crockford base32 без I/L/O/U — саме такі id роздає бек.
   private static readonly ULID = /^[0-9A-HJKMNP-TV-Z]{26}$/i
 
-  /** ?from=&to= — період лише якщо обидві дати валідні: половина діапазону сенсу не має. */
+  /**
+   * ?from=&to= — період лише якщо обидві дати справжні й `from` не пізніше `to`:
+   * половина діапазону, 31 лютого чи перевернутий період дали б 422 від бека.
+   */
   static period(params: UrlReader, fromKey = 'from', toKey = 'to'): UrlPeriod | null {
-    const from = params.get(fromKey)
-    const to = params.get(toKey)
-    if (!from || !to) return null
-    if (!UrlParamsHelper.ISO_DATE.test(from) || !UrlParamsHelper.ISO_DATE.test(to)) return null
+    const from = UrlParamsHelper.isoDate(params.get(fromKey))
+    const to = UrlParamsHelper.isoDate(params.get(toKey))
+    if (!from || !to || from > to) return null
     return { from, to }
   }
 
-  /** Одиночна дата ?sort_week=2026-07-27. Сміття відкидаємо — бек дав би 422. */
+  /** Одиночна дата ?sort_week=2026-07-27. Сміття й неіснуючий день відкидаємо — бек дав би 422. */
   static isoDate(raw: string | null): string | null {
-    return raw && UrlParamsHelper.ISO_DATE.test(raw) ? raw : null
+    if (!raw || !UrlParamsHelper.ISO_DATE.test(raw)) return null
+
+    // Date сам «переносить» 31 лютого в березень: дата справжня, лише якщо вона повертається собою.
+    const [year, month, day] = raw.split('-').map(Number)
+    const date = new Date(Date.UTC(year, month - 1, day))
+
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? raw : null
   }
 
   /** Значення з білого списку, інакше null. */
@@ -86,10 +94,10 @@ export class UrlParamsHelper {
     return value ? '1' : '0'
   }
 
-  /** Сміття й перша сторінка дають 1 — її в URL не пишемо (див. writePage). */
+  /** Сміття (і дробове `2.5`) й перша сторінка дають 1 — її в URL не пишемо (див. writePage). */
   static page(raw: string | null): number {
     const page = Number(raw)
-    return Number.isFinite(page) && page > 1 ? page : 1
+    return Number.isSafeInteger(page) && page > 1 ? page : 1
   }
 
   /** Значення для запису: дефолт (сторінка 1) в URL не потрапляє. */
