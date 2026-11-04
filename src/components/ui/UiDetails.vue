@@ -1,10 +1,17 @@
 <script setup lang="ts">
-// Дані запису списком «підпис — значення», як налаштування в Telegram: дві
-// колонки рядків з тонкими роздільниками. Рядки — UiDetailsRow.
+// Дані запису списком «підпис — значення» з тонкими роздільниками. Рядки —
+// UiDetailsRow: текст ліворуч, числа (`numeric`) праворуч.
+withDefaults(
+  defineProps<{
+    /** Дві колонки рядків на сторінці; одна — у вузькій панелі. На телефоні завжди одна. */
+    columns?: 1 | 2
+  }>(),
+  { columns: 2 },
+)
 </script>
 
 <template>
-  <dl class="ui-details"><slot /></dl>
+  <dl class="ui-details" :class="{ 'ui-details--single': columns === 1 }"><slot /></dl>
 </template>
 
 <style lang="scss" scoped>
@@ -15,9 +22,13 @@
   margin: 0;
 }
 
+.ui-details--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 @media (max-width: 760px) {
   .ui-details {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>
