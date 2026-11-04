@@ -1,0 +1,128 @@
+// Вигляд тостів vue-sonner під палітру застосунку.
+//
+// ЧОМУ ТУТ, А НЕ В КОМПОНЕНТІ: sonner рендерить тости в портал на <body>,
+// тож scoped-стилі до них не дістануть — потрібен глобальний файл (як
+// _shared/styles/table.scss). Проєкт імпортує його один раз у app.ts.
+//
+// richColors у <Toaster> вимкнений навмисно: він заливає весь тост кольором
+// типу, а тут акцент дає ліва смуга і плашка іконки.
+//
+// NB: змінні $color-* доступні через preprocessorOptions.additionalData (vite.config).
+
+// Селектор з [data-sonner-theme], а не голий [data-sonner-toaster]: свою
+// палітру sonner задає саме так, і без другого атрибута наші значення
+// програють за специфічністю.
+//
+// --width тут не задаємо: sonner пише його інлайном на елементі, і CSS його
+// не перебʼє (лише !important). Дефолтних 356px вистачає.
+[data-sonner-toaster][data-sonner-theme] {
+  --border-radius: 12px;
+  --normal-bg: #{$color-surface};
+  --normal-border: #{$color-border};
+  --normal-text: #{$color-text};
+}
+
+// Наведення не має міняти висоту тоста.
+// sonner при hover розгортає стек і фіксує висоту в `--initial-height`, а та
+// вимірюється ОДИН раз при монтуванні. У `toast.promise` текст після цього ще
+// змінюється (loading → success), довший рядок переноситься на другий — і
+// висота без курсора (auto) розходиться із зафіксованою. З `transition: height
+// 400ms` тост через це смикається туди-сюди під курсором. `auto` — той самий
+// режим, який sonner вмикає собі сам при expand-by-default.
+[data-sonner-toast][data-mounted='true'][data-expanded='true'] { height: auto; }
+
+[data-sonner-toast][data-styled='true'] {
+  gap: 10px;
+  // Справа більше — там сидить хрестик закриття.
+  padding: 12px 40px 12px 14px;
+  border-left: 3px solid $color-muted;
+  box-shadow: 0 10px 28px rgba(15, 20, 30, 0.14);
+  font-size: 13px;
+
+  [data-icon] {
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    justify-content: center;
+    border-radius: 9px;
+    background: $color-page-bg;
+    color: $color-muted;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+    }
+  }
+
+  [data-title] {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  [data-description] {
+    font-size: 12px;
+    line-height: 1.4;
+    color: $color-muted;
+  }
+
+  // Дія-кнопка (напр. «Перейти» під повідомленням) — тихе посилання, а не
+  // друга за яскравістю кнопка на екрані.
+  [data-button] {
+    height: auto;
+    padding: 0;
+    background: none;
+    color: $color-accent-ink;
+    font-size: 12px;
+    font-weight: 500;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  // Всередину картки замість кружечка, що звисає з кута (дефолт sonner):
+  // тост і так стоїть у кутку екрана, і виступ ліз би за його межі.
+  [data-close-button] {
+    top: 8px;
+    right: 8px;
+    left: auto;
+    bottom: auto;
+    width: 24px;
+    height: 24px;
+    transform: none;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: $color-muted;
+
+    &:hover {
+      background: $color-page-bg;
+      color: $color-text;
+    }
+  }
+
+  &[data-type='success'] {
+    border-left-color: $color-green;
+    [data-icon] { background: rgba($color-green, 0.12); color: $color-green-ink; }
+  }
+
+  &[data-type='error'] {
+    border-left-color: $color-danger;
+    [data-icon] { background: rgba($color-danger, 0.12); color: $color-danger; }
+  }
+
+  &[data-type='warning'] {
+    border-left-color: $color-warning;
+    [data-icon] { background: rgba($color-warning, 0.12); color: $color-warning-ink; }
+  }
+
+  &[data-type='info'] {
+    border-left-color: $color-accent;
+    [data-icon] { background: $color-accent-dim; color: $color-accent-ink; }
+  }
+
+  &[data-type='loading'] {
+    border-left-color: $color-accent;
+    [data-icon] { background: $color-accent-dim; color: $color-accent-ink; }
+  }
+}

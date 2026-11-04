@@ -33,6 +33,8 @@ plugins: [frontendCore(), /* ... */],
 
 Залежності ядра (`peerDependencies`) ставить сам проєкт. Необов'язкові: `vis-data` і `vis-timeline` для `TimelineChart`, `vue-sonner` для `ExportButton`, `motion-v` для `SortControlPanel`.
 
+Глобальні стилі ядра проєкт імпортує один раз в `app.ts`: `@/_shared/styles/table.scss` і `@/_shared/styles/toast.scss`.
+
 Підключати конфіг так, щоб `SharedConfig.configure()` спрацював до першого рендера. На рівні модуля читати тексти не можна, це перевіряє `tests/core/config-timing.test.ts`.
 
 ## Що проєкт зобов'язаний дати
@@ -46,18 +48,19 @@ plugins: [frontendCore(), /* ... */],
 - `$color-accent-ink`: текст акцентом і заливка під білим текстом, не менше 4,5:1 до `$color-surface` і `$color-accent-dim`.
 - `$color-accent-dim`: фон вибраного.
 - `$color-green-ink`, `$color-danger`: текст, не менше 4,5:1 до `$color-surface`.
-- Бейджі: `$color-green`, `$color-green-soft`, `$color-danger-soft`, `$color-danger-ink`, `$color-warning-soft`, `$color-warning-ink`, `$color-neutral-soft`, `$color-neutral-ink`, `$color-teal-soft`, `$color-teal-ink`.
+- Бейджі й тости: `$color-green`, `$color-green-soft`, `$color-danger-soft`, `$color-danger-ink`, `$color-warning`, `$color-warning-soft`, `$color-warning-ink`, `$color-neutral-soft`, `$color-neutral-ink`, `$color-teal-soft`, `$color-teal-ink`.
 - `$color-selected`, `$color-on-selected`: заливка вибраного (день у календарі, плитка) і текст на ній, не менше 4,5:1.
-- Інше: `$radius`, `$anim-small-time`, `$table-cell-padding-x`, `$table-cell-padding-y`.
-- Міксини: `scrollbarStyle`, `bigMobile` і `buttonPrimary` (вигляд головної кнопки, бренд проєкту).
+- Інше: `$radius`, `$table-cell-padding-x`, `$table-cell-padding-y`.
+- Міксини: спільні (`bigMobile`, `anim`, `sectionCaption`, `scrollbarStyle`, `$anim-small-time` і брейкпоінти) дає ядро, проєкт лише пересилає їх у своєму `_mixins.scss`: `@forward '@/_shared/styles/mixins' with ($muted: $color-muted);`. Своє тільки `buttonPrimary` (вигляд головної кнопки, бренд проєкту).
 
 Через `SharedConfig.configure()`, повний список у [src/config.ts](src/config.ts):
 
-- `labels`: усі тексти інтерфейсу ядра, `formatNumber`, `formatMoney`.
+- `labels`: усі тексти інтерфейсу ядра. Числа й гроші ядро форматує само (`NumberHelper`, `MoneyHelper`); `formatNumber` і `formatMoney` — лише щоб замінити формат.
 - `errors`: словник кодів бека, тексти за HTTP-статусом, текст за правилом валідації. Логіка ланцюжка в `errors/apiError.helper`, слова в проєкту.
 - `notifyError`: як показати помилку (тост, стор сповіщень, кнопка «Увійти»).
 - `link`: компонент посилання для `UiButton`: `{ component: RouterLink, prop: 'to' }` чи `{ component: Link, prop: 'href' }`.
 - `goBack`: «Назад» у `UiBackLink`.
+- `currentPath` (необов'язково): шлях поточної сторінки для `UiPageTabs`, реактивно. Без нього — `window.location.pathname`.
 
 Свій варіант кнопки (`<UiButton variant="violet">`) проєкт описує глобально. Селектор `.ui-btn.ui-btn--violet.ui-btn--violet`: scoped-стилі кнопки в ядрі сильніші за один клас.
 

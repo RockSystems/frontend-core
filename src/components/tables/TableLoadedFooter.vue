@@ -4,6 +4,7 @@
 
 import { Loader2 } from '@lucide/vue'
 import { SharedConfig } from '../../config'
+import { NumberHelper } from '../../helpers/number.helper'
 
 defineProps<{
   loaded: number
@@ -11,7 +12,8 @@ defineProps<{
   total: number | null
   isLoadingMore: boolean
 }>()
-const { labels, formatNumber } = SharedConfig.get()
+const { labels } = SharedConfig.get()
+const formatNumber = SharedConfig.get().formatNumber ?? NumberHelper.format
 </script>
 
 <template>

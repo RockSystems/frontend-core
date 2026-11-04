@@ -5,6 +5,7 @@
 import { ChevronLeft, ChevronRight } from '@lucide/vue'
 import UiIconButton from '../ui/UiIconButton.vue'
 import { SharedConfig } from '../../config'
+import { NumberHelper } from '../../helpers/number.helper'
 
 interface Props {
   page: number
@@ -25,7 +26,8 @@ const emit = defineEmits<{
   'update:perPage': [perPage: number]
 }>()
 
-const { labels, formatNumber } = SharedConfig.get()
+const { labels } = SharedConfig.get()
+const formatNumber = SharedConfig.get().formatNumber ?? NumberHelper.format
 </script>
 
 <template>
