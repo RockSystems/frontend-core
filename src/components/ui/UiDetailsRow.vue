@@ -2,7 +2,7 @@
 withDefaults(
   defineProps<{
     label: string
-    /** Число (сума, пробіг, кількість): праворуч, цифри однакової ширини. */
+    /** Число (сума, пробіг, кількість): цифри однакової ширини, без переносу. */
     numeric?: boolean
     /** Рядок на всю ширину — довгий текст (коментар). */
     wide?: boolean
@@ -22,12 +22,12 @@ withDefaults(
 </template>
 
 <style lang="scss" scoped>
-// Текст ліворуч, числа праворуч: так суми й кількості порівнюються по розрядах,
-// а текст читається з початку рядка. Правило всіх проєктів, не вирівнювати
-// все значення в один бік.
+// Усі значення ліворуч, з однієї вертикалі після колонки підписів — і текст, і
+// числа. «Числа праворуч» — правило таблиць: там у колонці одна величина. Тут у
+// кожному рядку своя, і значення, що стрибають то вліво, то вправо, читаються гірше.
 .ui-details-row {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-columns: 12rem minmax(0, 1fr);
   align-items: baseline;
   gap: 1rem;
   min-width: 0;
@@ -47,7 +47,6 @@ withDefaults(
 }
 
 .ui-details-row--numeric dd {
-  text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
