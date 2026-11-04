@@ -3,8 +3,9 @@ import { Upload, File as FileIcon, X } from '@lucide/vue';
 import { ref } from 'vue';
 import SmartField from './SmartField.vue';
 import { SharedConfig } from '../../../config'
+import { FileHelper } from '../../../helpers/file.helper';
 
-defineProps<{
+const props = defineProps<{
     label: string,
     name: string,
     accept?: string,
@@ -16,20 +17,38 @@ const labels = SharedConfig.get().labels
 const isDragging = ref(false);
 
 const onDragOver = (val: boolean) => isDragging.value = val;
+
+// Діалог вибору сам фільтрує за `accept`, а перетягнутий файл і «Усі файли»
+// в діалозі — ні. Не той файл зупиняємо тут, а не відповіддю бека після завантаження.
+function pick(
+    file: File | undefined,
+    handleChange: (value: unknown) => void,
+    setErrors: (message: string) => void,
+): void {
+    if (!file) return;
+
+    if (!FileHelper.isAccepted(file, props.accept)) {
+        const accept = (props.accept ?? '').split(',').map(token => token.trim()).join(', ');
+        setErrors(labels.fileWrongType?.(accept) ?? accept);
+        return;
+    }
+
+    handleChange(file);
+}
 </script>
 
 <template>
     <SmartField
         :name="name"
         :label="label"
-        v-slot="{ handleChange, value, inputId }"
+        v-slot="{ handleChange, setErrors, value, inputId }"
     >
         <div
             class="file-field"
             :class="{ 'dragging': isDragging, 'has-file': !!value }"
             @dragover.prevent="onDragOver(true)"
             @dragleave.prevent="onDragOver(false)"
-            @drop.prevent="onDragOver(false); handleChange($event.dataTransfer?.files[0])"
+            @drop.prevent="onDragOver(false); pick($event.dataTransfer?.files[0], handleChange, setErrors)"
         >
             <input
                 type="file"
@@ -38,7 +57,7 @@ const onDragOver = (val: boolean) => isDragging.value = val;
                 class="file-field__input"
                 @change="(e) => {
                   const input = e.target as HTMLInputElement;
-                  handleChange(input.files?.[0]);
+                  pick(input.files?.[0], handleChange, setErrors);
                   // Файл уже у формі. Без скидання той самий файл після «Прибрати»
                   // вибрати знову не вийшло б: значення не змінилось — change немає.
                   input.value = '';

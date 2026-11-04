@@ -16,6 +16,11 @@ export type SharedLabels = {
     dateTo: string
     fileDrop: string
     fileRemove: string
+    /**
+     * Файл не того типу, що в `accept` поля: «Підходять лише .csv, .xlsx».
+     * Без нього під полем буде сам перелік типів.
+     */
+    fileWrongType?: (accept: string) => string
     /** Пустое обязательное поле (zod: undefined / null). */
     required: string
     /** «Сторінка 2 з 9»: номер страницы ядро выделяет само, поэтому две части. */
