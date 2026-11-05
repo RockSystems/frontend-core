@@ -1,0 +1,56 @@
+// Спільні міксини й брейкпоінти проєктів. Проєкт підключає їх у своєму `_mixins.scss`:
+//
+//   @use 'variables' as *;
+//   @forward '@/_shared/styles/mixins' with ($muted: $color-muted);
+//
+// і поруч описує лише своє — `buttonPrimary` (бренд). Колір другорядного тексту
+// приходить через `with`: палітри проєкту ядро не знає.
+
+$muted: null !default;
+
+$mobile-big-width: 1024px;
+$mobile-width: 680px;
+$mobile-height: 600px;
+
+$anim-time: 0.3s;
+$anim-small-time: 0.2s;
+
+@mixin bigMobile {
+  @media (max-width: $mobile-big-width), (max-height: $mobile-height) {
+    @content;
+  }
+}
+
+@mixin anim($duration: $anim-time) {
+  transition: $duration ease-in-out;
+
+  &::before,
+  &::after {
+    transition: $duration ease-in-out;
+  }
+}
+
+// Підпис секції: «ДОХОДИ ЗА АГРЕГАТОРАМИ», «ІСТОРІЯ ЗМІН». Один на всі картки,
+// розкриті рядки й модалки, щоб розміри не розходились.
+@mixin sectionCaption {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $muted;
+}
+
+@mixin scrollbarStyle($width: 5px) {
+  scrollbar-color: $muted transparent;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $muted;
+    border-radius: 3px;
+  }
+}

@@ -130,8 +130,9 @@ export type SharedErrorTexts = {
 
 export type SharedConfigValue = {
     labels: SharedLabels
-    formatNumber: (value: number) => string
-    formatMoney: (value: number) => string
+    /** Свій формат чисел і грошей. Без них — `NumberHelper.format` і `MoneyHelper.format` ядра. */
+    formatNumber?: (value: number) => string
+    formatMoney?: (value: number) => string
     /** Тексти помилок API. */
     errors: SharedErrorTexts
     /**
@@ -143,6 +144,11 @@ export type SharedConfigValue = {
     link: { component: Component; prop: string }
     /** «Назад» у `UiBackLink`: по історії, а якщо її немає — на `fallback`. Роутер знає проєкт. */
     goBack: (fallback: string | object) => void
+    /**
+     * Шлях поточної сторінки для `UiPageTabs`, реактивно (`usePage().url`, `route.path`).
+     * Без нього — `window.location.pathname`.
+     */
+    currentPath?: () => string
     /** Сбой, который ядро уже показало на месте (список фильтра): только в трекинг. */
     reportError?: (error: unknown) => void
 }

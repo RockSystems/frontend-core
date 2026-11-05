@@ -4,6 +4,7 @@
 
 import { computed } from 'vue'
 import { SharedConfig } from '../../../config'
+import { NumberHelper } from '../../../helpers/number.helper'
 
 interface Props {
   value: number | null
@@ -20,7 +21,7 @@ const formatted = computed(() => {
   const rounded = props.precision === 0
     ? Math.round(props.value)
     : Number(props.value.toFixed(props.precision))
-  const num = SharedConfig.get().formatNumber(rounded)
+  const num = (SharedConfig.get().formatNumber ?? NumberHelper.format)(rounded)
   return props.suffix ? `${num} ${props.suffix}` : num
 })
 </script>

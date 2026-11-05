@@ -8,6 +8,7 @@
 
 import { computed } from 'vue'
 import { SharedConfig } from '../../../config'
+import { MoneyHelper } from '../../../helpers/money.helper'
 
 interface Props {
   value: number | null
@@ -15,7 +16,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const formatted = computed(() => props.value === null ? '—' : SharedConfig.get().formatMoney(props.value))
+const formatted = computed(() => props.value === null ? '—' : (SharedConfig.get().formatMoney ?? MoneyHelper.format)(props.value))
 
 // 'positive' зі знаком: дохід >= 0 → зелений, < 0 → червоний.
 const tone = computed<'positive' | 'negative' | 'muted' | 'danger' | null>(() => {

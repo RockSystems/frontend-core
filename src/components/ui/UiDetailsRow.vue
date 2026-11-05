@@ -27,7 +27,8 @@ withDefaults(
 // кожному рядку своя, і значення, що стрибають то вліво, то вправо, читаються гірше.
 .ui-details-row {
   display: grid;
-  grid-template-columns: 12rem minmax(0, 1fr);
+  // Ширина колонки підписів: вузька панель задає свою через `--ui-details-label`.
+  grid-template-columns: var(--ui-details-label, 12rem) minmax(0, 1fr);
   align-items: baseline;
   gap: 1rem;
   min-width: 0;
