@@ -175,6 +175,15 @@ useHotkey('Escape', (event) => {
     margin: -4px -20px;
     padding: 4px 20px;
 
+    // Тінь біля краю — лише коли за ним є прихований вміст: видно, що вікно
+    // прокручується, а не обірвалось. «Кришки» кольору картки їдуть разом із
+    // вмістом (local) і ховають тінь, щойно край досягнуто; тіні стоять (scroll).
+    background:
+      linear-gradient($color-surface 30%, rgba($color-surface, 0)) top / 100% 24px no-repeat local,
+      linear-gradient(rgba($color-surface, 0), $color-surface 70%) bottom / 100% 24px no-repeat local,
+      radial-gradient(farthest-side at 50% 0, rgba(15, 20, 30, 0.14), transparent) top / 100% 10px no-repeat scroll,
+      radial-gradient(farthest-side at 50% 100%, rgba(15, 20, 30, 0.14), transparent) bottom / 100% 10px no-repeat scroll;
+
     @include scrollbarStyle;
   }
 

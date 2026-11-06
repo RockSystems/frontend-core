@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {Info} from '@lucide/vue';
+import {TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger} from 'reka-ui';
 import {Field} from 'vee-validate';
 import {useId} from 'vue';
 
@@ -32,18 +33,23 @@ const inputId = useId();
           <span v-if="isRequired" class="smart-field__required" aria-hidden="true">*</span>
         </label>
 
-        <!-- tabindex — щоб підказка відкривалась і з клавіатури, не тільки по
-             наведенню; aria-label дублює текст для читалок екрана. -->
-        <button
-          v-if="hint"
-          type="button"
-          class="smart-field__hint"
-          :aria-label="hint"
-          tabindex="0"
-        >
-          <Info :size="12" />
-          <span class="smart-field__tip">{{ hint }}</span>
-        </button>
+        <!-- Підказка в порталі, поверх сторінки: тіло модалки прокручується й
+             обрізало б її біля краю. Відкривається наведенням, фокусом з
+             клавіатури й дотиком (фокус); дотик по значку її не закриває. -->
+        <TooltipProvider v-if="hint" :delay-duration="150">
+          <TooltipRoot disable-closing-trigger>
+            <TooltipTrigger as-child>
+              <button type="button" class="smart-field__hint" :aria-label="hint">
+                <Info :size="12" />
+              </button>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent class="smart-field__tip" side="top" :side-offset="6" :collision-padding="8">
+                {{ hint }}
+              </TooltipContent>
+            </TooltipPortal>
+          </TooltipRoot>
+        </TooltipProvider>
       </span>
       <slot v-bind="vee" :field="{ ...vee.field, id: inputId }" :input-id="inputId"></slot>
       <span class="ui-errors" v-if="vee.errors.length">
@@ -102,17 +108,12 @@ const inputId = useId();
     &:hover, &:focus-visible { opacity: 1; color: $color-accent; }
 
     // Показуємо підказку і по наведенню, і по фокусу з клавіатури.
-    &:hover .smart-field__tip,
-    &:focus-visible .smart-field__tip { opacity: 1; visibility: visible; }
+    &[data-state$='open'] { opacity: 1; color: $color-accent; }
   }
 
+  // Портал: над модалкою (999) і поповерами (1000).
   &__tip {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    z-index: 5;
-    transform: translateX(-50%);
-    width: max-content;
+    z-index: 1001;
     max-width: 240px;
     padding: 6px 8px;
     border-radius: 6px;
@@ -123,11 +124,6 @@ const inputId = useId();
     line-height: 1.35;
     text-align: left;
     white-space: normal;
-    // visibility, а не display: інакше не буде переходу прозорості.
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.12s ease;
-    pointer-events: none;
   }
 
   input:not([type='checkbox']):not([type='radio']):not([type='file']),
