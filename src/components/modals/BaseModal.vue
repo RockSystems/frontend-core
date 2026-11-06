@@ -39,7 +39,9 @@ useHotkey('Escape', (event) => {
 </template>
 
 <style lang="scss">
-// Overlay: фикс на весь экран, скролл внутри, прозрачный затемнённый бэкдроп.
+// Overlay: фикс на весь экран, прозрачный затемнённый бэкдроп. Картка не вища за
+// екран і скролить свою середину (.modal__body); overflow тут — запас для вікон
+// без неї, звичайне вікно overlay не прокручує.
 .modal-block {
   position: fixed;
   inset: 0;
@@ -108,6 +110,9 @@ useHotkey('Escape', (event) => {
 
   width: 100%;
   max-width: 480px;
+  // Не вища за екран: шапка й кнопки лишаються на місці, скролиться тіло.
+  max-height: 100%;
+  min-height: 0;
   margin: auto;
   padding: 20px;
 
@@ -129,6 +134,7 @@ useHotkey('Escape', (event) => {
 
   // ----- Заголовок ----------------------------------------------------------
   &__header {
+    flex: none;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -158,6 +164,18 @@ useHotkey('Escape', (event) => {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    // relative: абсолютні нащадки (сховані input чекбоксів) рахуються від тіла
+    // й скроляться з ним, а не розпирають overlay.
+    position: relative;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    // Поле біля краю тіла не має обрізати кільце фокусу: запас усередині,
+    // відступ картки той самий.
+    margin: -4px -20px;
+    padding: 4px 20px;
+
+    @include scrollbarStyle;
   }
 
   &__note {
@@ -168,6 +186,7 @@ useHotkey('Escape', (event) => {
 
   // ----- Футер + кнопки -----------------------------------------------------
   &__footer {
+    flex: none;
     display: flex;
     justify-content: flex-end;
     gap: 8px;
