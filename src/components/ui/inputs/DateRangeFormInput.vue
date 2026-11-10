@@ -7,6 +7,7 @@ type Props = {
   label: string
   startPath: string
   endPath: string
+  isRequired?: boolean
 } & DateRangeProps
 
 const props = defineProps<Props>();
@@ -32,6 +33,7 @@ function onBlur() {
   <div class="date-range-form-input">
     <span>
       {{ label }}
+      <span v-if="isRequired" class="smart-field__required" aria-hidden="true">*</span>
     </span>
     <DateRange
         v-model:start="startValue"
