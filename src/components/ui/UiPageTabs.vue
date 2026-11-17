@@ -58,11 +58,12 @@ const pathname = computed(() => currentPath?.() ?? window.location.pathname)
   &__item {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 10px;
+    gap: 5px;
+    padding: 3px 8px;
     border: 1px solid transparent;
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: 7px;
+    font-size: 12px;
+    line-height: 18px;
     color: $color-muted;
     white-space: nowrap;
     text-decoration: none;
