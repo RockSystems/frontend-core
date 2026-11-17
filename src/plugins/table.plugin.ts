@@ -1,5 +1,5 @@
 import type {} from '../types/table'
-import { type CellContext, type ColumnDef, createColumnHelper, type DisplayColumnDef } from '@tanstack/vue-table'
+import { type CellContext, type ColumnDef, type ColumnSub, createColumnHelper, type DisplayColumnDef } from '@tanstack/vue-table'
 import { Component, h, type VNode, VNodeChild } from 'vue'
 import AmountCell from '../components/tables/cells/AmountCell.vue'
 import DateTimeCell from '../components/tables/cells/DateTimeCell.vue'
@@ -58,8 +58,11 @@ interface NumColumnOptions extends ValueColumnOptions {
   precision?: number
 }
 
-/** Решта ColumnDef: ячейка, футер, вирівнювання, шапка-компонент замість назви. */
-type ColumnOptions<TData> = Omit<DisplayColumnDef<TData, any>, 'id'>
+/**
+ * Решта ColumnDef: ячейка, футер, вирівнювання, шапка-компонент замість назви.
+ * `sub` — другий рядок колонки (`ctx.sub()`), фабрика кладе його в `meta`.
+ */
+type ColumnOptions<TData> = Omit<DisplayColumnDef<TData, any>, 'id'> & { sub?: ColumnSub<TData, any> }
 
 const CellRegistry = {
   // презентационные
@@ -106,18 +109,25 @@ export class TableHelperFactory {
          * `money()` не підходить (ставка поруч із сумою, тижні абонплати).
          */
         moneyTotal: (value: number | null, emphasis?: ValueColumnOptions['emphasis']) => VNode
+        /**
+         * Другий рядок колонки — `{ sub: ctx.sub('manager', c => …) }`: деталь
+         * під основним значенням, свій підпис у шапці. Підпис і сортування — з
+         * реєстру полів. Сортоване поле має бути `isHidden`: окремого стовпця в
+         * нього нема, ключ сортування тримає прихований носій.
+         */
+        sub: (id: TId, cell: CellFn) => ColumnSub<TData, any>
       }
 
       const cells = { ...CellRegistry, ...registry } as Registry
       const ch = createColumnHelper<TData>()
 
-      const meta = (id: TId, own: ColumnOptions<TData>['meta']) => ({ hint: fields.column(id).hint, ...own })
+      const meta = (id: TId, { meta: own, sub }: ColumnOptions<TData>) => ({ hint: fields.column(id).hint, ...own, ...(sub ? { sub } : {}) })
 
       const ctx: ColumnContext = {
         cell: (key, build) => cellCtx => h(cells[key], build(cellCtx)),
         cellRaw: build => cellCtx => build(cellCtx),
 
-        accessor: (id, pick, options = {}) => {
+        accessor: (id, pick, { sub, ...options } = {}) => {
           const field = fields.column(id)
 
           return ch.accessor(pick, {
@@ -126,15 +136,15 @@ export class TableHelperFactory {
             enableSorting: field.isSortable,
             sortDescFirst: field.isDescFirst,
             ...options,
-            meta: meta(id, options.meta),
+            meta: meta(id, { meta: options.meta, sub }),
           }) as ColumnDef<TData, any>
         },
 
-        display: (id, options = {}) => ch.display({
+        display: (id, { sub, ...options } = {}) => ch.display({
           id,
           header: fields.column(id).header,
           ...options,
-          meta: meta(id, options.meta),
+          meta: meta(id, { meta: options.meta, sub }),
         }) as ColumnDef<TData, any>,
 
         money: (id, pick, { emphasis, footer } = {}) => ctx.accessor(id, pick, {
@@ -152,6 +162,16 @@ export class TableHelperFactory {
         }),
 
         moneyTotal: (value, emphasis) => h(MoneyCell, { value, emphasis }),
+
+        sub: (id, cell) => {
+          const field = fields.column(id)
+          // Без носія TanStack не втримав би ключ, і клік по підпису мовчки нічого б не робив.
+          if (field.isSortable && !fields.hiddenIds.includes(id)) {
+            throw new Error(`TableHelperFactory: sortable sub field "${id}" must be isHidden`)
+          }
+
+          return { id, header: field.header, isSortable: field.isSortable, cell }
+        },
       }
 
       // Приховані стовпці-носії: значення їм не потрібне (сортує бек), але без

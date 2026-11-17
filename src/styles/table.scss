@@ -175,6 +175,62 @@
   }
 }
 
+// Другий рядок колонки (meta.sub): у шапці — підпис під назвою, у комірці —
+// деталь під значенням. Тихіше за основне: це уточнення, а не друга колонка.
+.t__th-sub {
+  display: block;
+  margin-top: 1px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+  color: inherit;
+  opacity: 0.75;
+
+  &--sortable {
+    cursor: pointer;
+
+    &:hover { opacity: 1; }
+
+    &:focus-visible {
+      outline: 1px solid $color-accent;
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+  }
+
+  &.is-sorted {
+    opacity: 1;
+    font-weight: 600;
+    color: $color-accent-ink;
+  }
+}
+
+.t__sub {
+  // width 0 + min-width 100%: деталь не розширює колонку — ширину задає основне
+  // значення, а довге обрізається трьома крапками.
+  width: 0;
+  min-width: 100%;
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  color: $color-muted;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Компактна щільність (перемикач UiTableCard): лише основне, рядок нижчий.
+.ui-table-card--compact {
+  .t__sub,
+  .t__th-sub { display: none; }
+}
+
 // Модифікатори для «плоских» таблиць (без TanStack). Там немає columnDef.meta,
 // через яке TableBodyRow ставить вирівнювання інлайн-стилем, тож класами.
 .t__th--num,

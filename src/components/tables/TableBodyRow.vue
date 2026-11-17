@@ -51,6 +51,10 @@ const labels = SharedConfig.get().labels
       <div class="t__cell">
         <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
       </div>
+      <!-- Другий рядок колонки (meta.sub). Компактна щільність його ховає. -->
+      <div v-if="cell.column.columnDef.meta?.sub" class="t__sub">
+        <FlexRender :render="cell.column.columnDef.meta.sub.cell" :props="cell.getContext()" />
+      </div>
     </td>
   </tr>
 </template>

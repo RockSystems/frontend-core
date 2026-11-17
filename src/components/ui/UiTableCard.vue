@@ -6,9 +6,12 @@
 // людина шукала кнопку скидання вгорі й оновлювала всю сторінку.
 
 import { SharedConfig } from '../../config'
-import { CircleAlert, FunnelX, Inbox, RotateCw, SearchX } from '@lucide/vue'
+import { CircleAlert, FunnelX, Inbox, Rows2, Rows3, RotateCw, SearchX } from '@lucide/vue'
+import { computed, provide, ref } from 'vue'
 import UiButton from './UiButton.vue'
+import UiIconButton from './UiIconButton.vue'
 import type { ResettableFilters } from '../../composables/useServerList'
+import { TABLE_CARD_KEY } from '../tables/tableCard.context'
 
 withDefaults(defineProps<{
   isEmpty: boolean
@@ -31,10 +34,28 @@ withDefaults(defineProps<{
   isError: false,
   errorText: () => SharedConfig.get().labels.tableLoadFailed,
 })
+
+// Щільність: перемикач — лише в таблиці з другими рядками колонок (її шапка
+// реєструється сама) і лише коли проєкт дав, де тримати вибір.
+const stackedCount = ref(0)
+provide(TABLE_CARD_KEY, {
+  registerStacked: () => {
+    stackedCount.value++
+    return () => { stackedCount.value-- }
+  },
+})
+
+const density = SharedConfig.get().tableDensity
+const isDensitySwitchable = computed(() => density !== undefined && stackedCount.value > 0)
+const isCompact = computed(() => isDensitySwitchable.value && density?.get() === 'compact')
+
+function toggleDensity(): void {
+  density?.set(isCompact.value ? 'comfortable' : 'compact')
+}
 </script>
 
 <template>
-  <section class="ui-table-card" :class="{ 'ui-table-card--fit': isFitContent }">
+  <section class="ui-table-card" :class="{ 'ui-table-card--fit': isFitContent, 'ui-table-card--compact': isCompact }">
     <div v-if="isError" class="ui-table-card__state ui-table-card__state--error" role="alert">
       <CircleAlert :size="20" class="ui-table-card__icon" />
       <p class="ui-table-card__text">{{ errorText }}</p>
@@ -62,7 +83,24 @@ withDefaults(defineProps<{
       <slot />
     </div>
 
-    <slot v-if="!isEmpty && !isError" name="footer" />
+    <!-- Перемикач — у смузі підвалу праворуч, з тією ж рамкою й фоном: лінія
+         підвалу йде суцільна, а лічильник чи пейджер лишаються ліворуч. -->
+    <div v-if="isDensitySwitchable && !isEmpty && !isError" class="ui-table-card__bottom">
+      <div class="ui-table-card__footer"><slot name="footer" /></div>
+      <div class="ui-table-card__density">
+        <UiIconButton
+          variant="ghost"
+          tone="muted"
+          :aria-pressed="isCompact"
+          :aria-label="isCompact ? density?.labels.toComfortable : density?.labels.toCompact"
+          :title="isCompact ? density?.labels.toComfortable : density?.labels.toCompact"
+          @click="toggleDensity"
+        >
+          <component :is="isCompact ? Rows2 : Rows3" :size="16" />
+        </UiIconButton>
+      </div>
+    </div>
+    <slot v-else-if="!isEmpty && !isError" name="footer" />
   </section>
 </template>
 
@@ -111,6 +149,26 @@ withDefaults(defineProps<{
   &__scroll {
     overflow: auto;
     flex: 1;
+  }
+
+  // Підвал лишається як був (зі своєю рамкою й фоном), поруч — клітинка
+  // перемикача з тією ж рамкою: stretch тягне її на висоту підвалу.
+  &__bottom {
+    display: flex;
+    align-items: stretch;
+  }
+
+  &__footer {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__density {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    border-top: 1px solid $color-border;
+    background: $color-page-bg;
   }
 }
 </style>

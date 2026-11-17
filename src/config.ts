@@ -151,7 +151,20 @@ export type SharedConfigValue = {
     currentPath?: () => string
     /** Сбой, который ядро уже показало на месте (список фильтра): только в трекинг. */
     reportError?: (error: unknown) => void
+    /**
+     * Де тримати щільність таблиць (акаунт, localStorage), реактивно. Без нього
+     * перемикача немає: таблиці з другими рядками колонок показують їх завжди.
+     */
+    tableDensity?: {
+        get: () => TableDensity
+        set: (value: TableDensity) => void
+        /** Підписи кнопки: на що вона перемкне. */
+        labels: { toCompact: string; toComfortable: string }
+    }
 }
+
+/** Звичайно — з другими рядками колонок, компактно — лише основне, рядок нижчий. */
+export type TableDensity = 'comfortable' | 'compact'
 
 let current: SharedConfigValue | null = null
 
