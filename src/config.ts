@@ -34,6 +34,12 @@ export type SharedLabels = {
     pagerPrev: string
     pagerNext: string
     pagerPerPage: string
+    /**
+     * Порожній пункт списку форми (`SelectFormInput`): `empty` — у необов'язковому полі, ним
+     * скидають вибір («Не вказано»); `choose` — підказка в обов'язковому («Оберіть»).
+     * Без них порожній пункт без тексту, як було.
+     */
+    select?: { empty: string; choose: string }
     /** Удалённый список фильтра (`FilterSelect` с `fetchPage`): загрузка, сбой, повтор, ещё. */
     loading: string
     loadFailed: string
