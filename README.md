@@ -61,6 +61,7 @@ plugins: [frontendCore(), /* ... */],
 - `link`: компонент посилання для `UiButton`: `{ component: RouterLink, prop: 'to' }` чи `{ component: Link, prop: 'href' }`.
 - `goBack`: «Назад» у `UiBackLink`.
 - `currentPath` (необов'язково): шлях поточної сторінки для `UiPageTabs`, реактивно. Без нього — `window.location.pathname`.
+- `tableDensity` (необов'язково): де тримати щільність таблиць «звичайно / компактно» (`get`, `set`, підписи кнопки). Без нього перемикача немає, другі рядки колонок видно завжди.
 
 Свій варіант кнопки (`<UiButton variant="violet">`) проєкт описує глобально. Селектор `.ui-btn.ui-btn--violet.ui-btn--violet`: scoped-стилі кнопки в ядрі сильніші за один клас.
 
