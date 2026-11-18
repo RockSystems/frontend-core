@@ -17,9 +17,12 @@
 // перший ряд фільтрів — поруч із ними, решта рядів — на всю ширину. Flex ділить
 // на колонки на всю висоту, і під діями лишалась порожнеча, поки фільтри
 // тіснились по два в рядку.
+//
+// Правило для чипа одне: корінь рядковий (inline-flex) — стає в ряд; блоковий
+// займає власний рядок на всю ширину (так розкривається панель під кнопкою).
 
 import { FunnelX } from '@lucide/vue'
-import { Comment, Fragment, computed, h, useSlots, type VNode } from 'vue'
+import { computed } from 'vue'
 import { SharedConfig } from '../../config'
 import UiButton from '../ui/UiButton.vue'
 import type { Period } from '../../helpers/period.helper'
@@ -56,23 +59,6 @@ const searchModel = computed<string>({
 })
 
 const showSearch = computed(() => props.searchPlaceholder !== undefined)
-
-// Кожен чип — у власну рядкову обгортку: обтікають рядкові елементи, а display
-// самих чипів (flex, block) чіпати не можна — зламався б їхній вміст.
-// Порожні v-if (коментарі) лишаються на місці: індекси решти не зсуваються, і
-// стан чипа не скидається, коли сусід з'являється чи зникає.
-const slots = useSlots()
-
-function flatten(nodes: VNode[]): VNode[] {
-  return nodes.flatMap(node => (node.type === Fragment && Array.isArray(node.children)
-    ? flatten(node.children as VNode[])
-    : [node]))
-}
-
-const Chips = () => flatten(slots.chips?.() ?? []).map((node, index) => (node.type === Comment
-  ? node
-  : h('div', { class: 'filters__item', key: node.key ?? `chip-${index}` }, [node])))
-
 </script>
 
 <template>
@@ -84,7 +70,7 @@ const Chips = () => flatten(slots.chips?.() ?? []).map((node, index) => (node.ty
       <slot name="toolbar" />
     </div>
 
-    <div v-if="period !== undefined || $slots.period" class="filters__item filters__group">
+    <div v-if="period !== undefined || $slots.period" class="filters__group">
       <!-- Без підпису «Період»: іконка календаря в тригері й так очевидна.
            Поле фіча може підмінити своєю обгорткою (слот #period); дефолт —
            звичайний DateRangeField. -->
@@ -100,22 +86,19 @@ const Chips = () => flatten(slots.chips?.() ?? []).map((node, index) => (node.ty
       </slot>
     </div>
 
-    <div v-if="showSearch" class="filters__item filters__item--search">
-      <UiSearchInput
-        v-model="searchModel"
-        class="filters__search"
-        :placeholder="searchPlaceholder ?? ''"
-      />
-    </div>
+    <UiSearchInput
+      v-if="showSearch"
+      v-model="searchModel"
+      class="filters__search"
+      :placeholder="searchPlaceholder ?? ''"
+    />
 
-    <Chips />
+    <slot name="chips" />
 
-    <div v-if="filters?.isFiltered" class="filters__item">
-      <UiButton variant="ghost" size="sm" @click="filters.reset()">
-        <FunnelX :size="14" />
-        {{ SharedConfig.get().labels.resetFilters }}
-      </UiButton>
-    </div>
+    <UiButton v-if="filters?.isFiltered" variant="ghost" size="sm" @click="filters.reset()">
+      <FunnelX :size="14" />
+      {{ SharedConfig.get().labels.resetFilters }}
+    </UiButton>
   </section>
 </template>
 
@@ -131,6 +114,14 @@ const Chips = () => flatten(slots.chips?.() ?? []).map((node, index) => (node.ty
   border: 1px solid $color-border;
   border-radius: 12px;
 
+  // Кожен фільтр — прямий нащадок картки, свій чи з #chips (тому :deep).
+  // Відступи — полями: gap між рядковими елементами не працює.
+  > :deep(:not(.filters__tools)) {
+    max-width: calc(100% - 12px);
+    margin: 0 12px 10px 0;
+    vertical-align: middle;
+  }
+
   &__tools {
     float: right;
     display: flex;
@@ -138,15 +129,6 @@ const Chips = () => flatten(slots.chips?.() ?? []).map((node, index) => (node.ty
     gap: 4px;
     // Праве поле повертає діям звичні 16px від краю картки (див. padding).
     margin: 0 12px 10px 12px;
-  }
-
-  // Рядкова обгортка кожного фільтра (свої — тут, чипи — у Chips, тому :deep).
-  // Відступи — полями, бо gap між рядковими елементами не працює.
-  & :deep(.filters__item) {
-    display: inline-block;
-    max-width: calc(100% - 12px);
-    margin: 0 12px 10px 0;
-    vertical-align: middle;
   }
 
   &__group {
@@ -159,10 +141,8 @@ const Chips = () => flatten(slots.chips?.() ?? []).map((node, index) => (node.ty
   // Ширина — забота ряда фильтров, не самого поля (см. UiSearchInput).
   // Фіксована ширина: розтягнутись чи стиснутись під вільне місце в обтіканні
   // нема як. 260px — колишня основа у flex: ширший пошук переносив би сусідів
-  // на новий рядок. На вузькому екрані — не ширше картки.
-  &__item--search { width: 260px; }
-
-  &__search { width: 100%; }
+  // на новий рядок. На вузькому екрані — не ширше картки (max-width вище).
+  &__search { width: 260px; }
 }
 
 </style>
