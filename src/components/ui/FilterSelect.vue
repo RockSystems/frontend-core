@@ -182,95 +182,99 @@ function onSelect(value: unknown): void {
 </script>
 
 <template>
-  <ComboboxRoot
-    v-model:open="isOpen"
-    :model-value="multiple ? modelValue : (modelValue[0] ?? null)"
-    :multiple="multiple"
-    :disabled="disabled"
-    ignore-filter
-    class="fs"
-    @update:model-value="onSelect"
-  >
-    <ComboboxAnchor class="fs__anchor">
-      <ComboboxTrigger
-        class="fs__trigger"
-        :class="{ 'fs__trigger--filled': modelValue.length > 0 }"
-      >
-        <span class="fs__label">{{ triggerLabel }}</span>
-        <ChevronDown class="fs__chevron" :class="{ 'fs__chevron--open': isOpen }" :size="14" />
-      </ComboboxTrigger>
+  <!-- Корінь — свій div, а не ComboboxRoot: той рендериться через PopperRoot без
+       власної розмітки, scoped-атрибут на нього не потрапляв, і .fs не діяв — селект
+       був блоковим, на відміну від решти чипів. -->
+  <div class="fs">
+    <ComboboxRoot
+      v-model:open="isOpen"
+      :model-value="multiple ? modelValue : (modelValue[0] ?? null)"
+      :multiple="multiple"
+      :disabled="disabled"
+      ignore-filter
+      @update:model-value="onSelect"
+    >
+      <ComboboxAnchor class="fs__anchor">
+        <ComboboxTrigger
+          class="fs__trigger"
+          :class="{ 'fs__trigger--filled': modelValue.length > 0 }"
+        >
+          <span class="fs__label">{{ triggerLabel }}</span>
+          <ChevronDown class="fs__chevron" :class="{ 'fs__chevron--open': isOpen }" :size="14" />
+        </ComboboxTrigger>
 
-      <!-- Хрестик поза тригером: клік по ньому не має відкривати список. -->
-      <button
-        v-if="modelValue.length > 0 && !disabled"
-        type="button"
-        class="fs__clear"
-        :aria-label="placeholder"
-        @click.stop="clear"
-      >
-        <X :size="12" />
-      </button>
-    </ComboboxAnchor>
+        <!-- Хрестик поза тригером: клік по ньому не має відкривати список. -->
+        <button
+          v-if="modelValue.length > 0 && !disabled"
+          type="button"
+          class="fs__clear"
+          :aria-label="placeholder"
+          @click.stop="clear"
+        >
+          <X :size="12" />
+        </button>
+      </ComboboxAnchor>
 
-    <ComboboxPortal>
-      <ComboboxContent position="popper" :side-offset="4" class="fs__content">
-        <div v-if="isSearchable" class="fs__search">
-          <Search :size="13" class="fs__search-icon" />
-          <!-- display-value: без нього reka-ui в одиночному режимі кладе в поле
-               пошуку сире значення обраного пункту (id, `cash_deposit`). -->
-          <ComboboxInput
-            v-model="searchTerm"
-            :display-value="() => ''"
-            class="fs__search-input"
-            :placeholder="searchPlaceholder"
-          />
-        </div>
-
-        <ComboboxViewport class="fs__viewport">
-          <!-- ignore-filter вимикає й підрахунок збігів у reka-ui, тому порожній
-               стан показуємо самі. -->
-          <div v-if="isLoadFailed" class="fs__empty" role="alert">
-            {{ labels.loadFailed }}
-            <button type="button" class="fs__more" @click="loadPage(page === 0)">{{ labels.retry }}</button>
-          </div>
-          <div v-else-if="isLoading && !visibleOptions.length" class="fs__empty" role="status">
-            {{ labels.loading }}
-          </div>
-          <div v-else-if="!visibleOptions.length" class="fs__empty">
-            {{ emptyText ?? '—' }}
+      <ComboboxPortal>
+        <ComboboxContent position="popper" :side-offset="4" class="fs__content">
+          <div v-if="isSearchable" class="fs__search">
+            <Search :size="13" class="fs__search-icon" />
+            <!-- display-value: без нього reka-ui в одиночному режимі кладе в поле
+                 пошуку сире значення обраного пункту (id, `cash_deposit`). -->
+            <ComboboxInput
+              v-model="searchTerm"
+              :display-value="() => ''"
+              class="fs__search-input"
+              :placeholder="searchPlaceholder"
+            />
           </div>
 
-          <ComboboxItem
-            v-for="opt in visibleOptions"
-            :key="String(opt.value)"
-            :value="opt.value"
-            class="fs__item"
-          >
-            <span
-              class="fs__check"
-              :class="[
-                { 'fs__check--on': modelValue.includes(opt.value) },
-                multiple ? 'fs__check--box' : 'fs__check--dot',
-              ]"
+          <ComboboxViewport class="fs__viewport">
+            <!-- ignore-filter вимикає й підрахунок збігів у reka-ui, тому порожній
+                 стан показуємо самі. -->
+            <div v-if="isLoadFailed" class="fs__empty" role="alert">
+              {{ labels.loadFailed }}
+              <button type="button" class="fs__more" @click="loadPage(page === 0)">{{ labels.retry }}</button>
+            </div>
+            <div v-else-if="isLoading && !visibleOptions.length" class="fs__empty" role="status">
+              {{ labels.loading }}
+            </div>
+            <div v-else-if="!visibleOptions.length" class="fs__empty">
+              {{ emptyText ?? '—' }}
+            </div>
+
+            <ComboboxItem
+              v-for="opt in visibleOptions"
+              :key="String(opt.value)"
+              :value="opt.value"
+              class="fs__item"
             >
-              <Check v-if="modelValue.includes(opt.value)" :size="11" />
-            </span>
-            <span class="fs__item-label">{{ opt.label }}</span>
-          </ComboboxItem>
+              <span
+                class="fs__check"
+                :class="[
+                  { 'fs__check--on': modelValue.includes(opt.value) },
+                  multiple ? 'fs__check--box' : 'fs__check--dot',
+                ]"
+              >
+                <Check v-if="modelValue.includes(opt.value)" :size="11" />
+              </span>
+              <span class="fs__item-label">{{ opt.label }}</span>
+            </ComboboxItem>
 
-          <button
-            v-if="fetchPage && !isLoadFailed && page > 0 && page < lastPage"
-            type="button"
-            class="fs__more"
-            :disabled="isLoading"
-            @click="loadPage(false)"
-          >
-            {{ isLoading ? labels.loading : labels.loadMore }}
-          </button>
-        </ComboboxViewport>
-      </ComboboxContent>
-    </ComboboxPortal>
-  </ComboboxRoot>
+            <button
+              v-if="fetchPage && !isLoadFailed && page > 0 && page < lastPage"
+              type="button"
+              class="fs__more"
+              :disabled="isLoading"
+              @click="loadPage(false)"
+            >
+              {{ isLoading ? labels.loading : labels.loadMore }}
+            </button>
+          </ComboboxViewport>
+        </ComboboxContent>
+      </ComboboxPortal>
+    </ComboboxRoot>
+  </div>
 </template>
 
 <style scoped lang="scss">
