@@ -1,9 +1,10 @@
 // Форма проєкту: `useMyForm` + одна політика помилок сабміту.
 //
 // Колбек `handleSubmit` описує лише успішний шлях. Відмову бека віддаємо формі
-// (422 → поля), текст уже показав onError мутації, а вікно лишається відкритим
-// з набраним. Політика тут, а не try/catch у кожній модалці: там закрити вікно
-// на помилці було одним рядком — і так губили введене.
+// (422 → поля), а вікно лишається відкритим з набраним. Помилка поля — лише під
+// полем: поки сабміт іде, onError мутації її не тостить (`FormErrorScope`); помилку
+// форми в цілому тостить. Політика тут, а не try/catch у кожній модалці: там закрити
+// вікно на помилці було одним рядком — і так губили введене.
 
 import { useFieldArray } from 'vee-validate'
 import type { z } from 'zod'
@@ -12,6 +13,7 @@ import { useMyForm, type UseMyFormConfig } from './useMyForm'
 import type { PathInto } from '../helpers/form.helper'
 import { ActionCancelledError } from '../errors/actionCancelled'
 import { ApiErrorHelper } from '../errors/apiError.helper'
+import { FormErrorScope } from '../errors/formErrorScope'
 
 interface ErrorPaths {
   /** Поле бека → поле форми, лише для змістовних перейменувань (`payment_date` → «Дата»). */
@@ -45,10 +47,16 @@ export function useAppForm<T extends z.ZodTypeAny>(schema: T, config: AppFormCon
     )
   }
 
+  /** Відмова ляже вся в поля цієї форми — тоді її показує форма, а не тост. */
+  function fitsForm(error: unknown): boolean {
+    const paths = errorPaths?.(form.fNames, form.values) ?? {}
+    return ApiErrorHelper.fitsForm(error, paths.fieldPaths ?? form.fieldPaths, paths.map)
+  }
+
   function handleSubmit(fn: (values: z.infer<T>) => Promise<unknown>) {
     const run = vvHandleSubmit(async (values) => {
       try {
-        await fn(values)
+        await FormErrorScope.run(fitsForm, () => fn(values))
       } catch (error) {
         showError(error)
       }

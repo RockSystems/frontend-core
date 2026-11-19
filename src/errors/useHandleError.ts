@@ -6,12 +6,15 @@ import { AppError } from '../api/errors'
 import { SharedConfig } from '../config'
 import { ActionCancelledError } from './actionCancelled'
 import { ApiErrorHelper } from './apiError.helper'
+import { FormErrorScope } from './formErrorScope'
 
 export function handleApiError(error: unknown): void {
   // Скасований запит — не помилка: ми самі обірвали застарілий при зміні фільтра.
   if (axios.isCancel(error)) return
   // Людина закрила діалог, без якого дію не виконати.
   if (error instanceof ActionCancelledError) return
+  // Помилка полів форми, що зараз відправляється: її текст буде під полями, другий — у тості — зайвий.
+  if (FormErrorScope.covers(error)) return
 
   // Перехоплювач загортає все, що прийшло з мережі, в AppError. Решта — баг нашого коду.
   if (!(error instanceof AppError)) console.error('-- Unhandled error --', error)

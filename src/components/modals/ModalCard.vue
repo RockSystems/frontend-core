@@ -37,10 +37,14 @@ onMounted(() => requestAnimationFrame(() => root.value?.querySelector<HTMLElemen
 </script>
 
 <template>
+  <!-- novalidate: перевіряє схема форми нашими текстами. Без нього браузер сам блокує
+       сабміт на min/max дати чи type="email" і показує підказку мовою браузера, а не інтерфейсу.
+       Календар дати й далі не дає обрати поза min/max. -->
   <component
     :is="form ? 'form' : 'div'"
     ref="root"
     class="modal"
+    :novalidate="form || undefined"
     @submit.prevent="emit('submit')"
   >
     <header class="modal__header">

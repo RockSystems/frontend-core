@@ -4,6 +4,7 @@ import { ApiProblemHelper } from '../../src/api/errors/apiProblem'
 import { SharedConfig } from '../../src/config'
 import { ActionCancelledError } from '../../src/errors/actionCancelled'
 import { ApiErrorHelper } from '../../src/errors/apiError.helper'
+import { FormErrorScope } from '../../src/errors/formErrorScope'
 import { handleApiError } from '../../src/errors/useHandleError'
 
 const notifyError = vi.fn()
@@ -172,5 +173,36 @@ describe('handleApiError', () => {
     expect(log).toHaveBeenCalled()
     expect(notifyError).toHaveBeenCalledWith('something went wrong', expect.objectContaining({ isSessionExpired: false }))
     log.mockRestore()
+  })
+})
+
+describe('form errors: a field error under the field, a form error in a toast', () => {
+  const fields = ['name', 'payment_date', 'month']
+  const fits = (error: unknown) => ApiErrorHelper.fitsForm(error, fields)
+
+  it('skips the toast while a form shows every entry under its fields', async () => {
+    const error = apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name'), validation('payment_date')] })
+
+    await FormErrorScope.run(fits, async () => handleApiError(error))
+
+    expect(notifyError).not.toHaveBeenCalled()
+  })
+
+  it('toasts an entry that has no field or a field the form does not have', async () => {
+    const formWide = apiError(422, { code: 'BUSINESS_RULE_VIOLATION', errors: [{ code: 'NOT_ENOUGH', meta: { left: 1 } }] })
+    const unknownField = apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name'), validation('vin')] })
+
+    await FormErrorScope.run(fits, async () => {
+      handleApiError(formWide)
+      handleApiError(unknownField)
+    })
+
+    expect(notifyError).toHaveBeenCalledTimes(2)
+  })
+
+  it('toasts field errors again once the form is not submitting', () => {
+    handleApiError(apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name')] }))
+
+    expect(notifyError).toHaveBeenCalledTimes(1)
   })
 })

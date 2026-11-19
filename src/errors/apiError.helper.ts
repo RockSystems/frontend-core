@@ -108,7 +108,8 @@ export class ApiErrorHelper {
    * Віддати помилку 422 полям форми: `true` — вона лягла у форму.
    *
    * Модалку з формою при помилці НЕ закриваємо: відмову виправляють тут же, набране
-   * не має зникати разом із вікном. Текст показує onError мутації.
+   * не має зникати разом із вікном. Помилка поля — лише під полем: тост `handleApiError`
+   * пропускає (`fitsForm` + `FormErrorScope`); помилку форми в цілому показує тост.
    *
    * Поля бека — імена запиту (`payment_date`), у форми свої (`month`). Шлях перекладається:
    * точний збіг → camelCase → `map` → `SharedConfig.errors.resolveField`.
@@ -131,10 +132,29 @@ export class ApiErrorHelper {
 
     if (Object.keys(fields).length > 0) form.setErrors(fields)
 
-    // Не тост: текст людина вже бачить від onError, а це підказка розробнику, чого бракує в `map`.
+    // Такий запис тостить onError (fitsForm — ні); тут підказка розробнику, чого бракує в `map`.
     if (unknownPaths.length > 0) console.warn('[api] field errors with no form field:', unknownPaths)
 
     return true
+  }
+
+  /**
+   * Уся відмова лягає в поля форми: кожен запис 422 має поле, і воно є у формі.
+   * Тоді текст — під полями, тост не потрібен. Запис без поля (бізнес-правило форми
+   * в цілому) чи з полем, якого у формі немає, — помилка форми, її показує тост.
+   */
+  static fitsForm(error: unknown, fieldPaths: readonly string[], map: Record<string, string> = {}): boolean {
+    if (!(error instanceof AppError) || error.status !== 422 || error.problem === null) return false
+
+    const { fieldsOf } = texts()
+    const { errors } = error.problem
+
+    return errors.length > 0 && errors.every((entry) => {
+      const fields = fieldsOf?.(entry) ?? (entry.field === undefined ? [] : [entry.field])
+
+      return fields.length > 0
+        && fields.every(field => ApiErrorHelper.formPath(field, fieldPaths, map) !== undefined)
+    })
   }
 
   /** `undefined` — такого поля у формі немає. */
