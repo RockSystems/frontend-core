@@ -60,7 +60,7 @@ const isWide = TableViewState.isWide
       <!-- У розгорнутому — своя комірка поруч, звичайним текстом. -->
       <td
         v-if="cell.column.columnDef.meta?.sub && isWide"
-        class="t__td"
+        class="t__td t__td--sub"
         :style="cell.column.columnDef.meta?.align ? { textAlign: cell.column.columnDef.meta.align } : undefined"
       >
         <div class="t__cell">
