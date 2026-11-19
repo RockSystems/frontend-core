@@ -5,6 +5,7 @@ import { type Row } from '@tanstack/vue-table'
 import { ChevronDown, ChevronRight } from '@lucide/vue'
 import UiIconButton from '../ui/UiIconButton.vue'
 import { SharedConfig } from '../../config'
+import { TableViewState } from './tableView'
 
 defineProps<{
   row: Row<T>
@@ -19,6 +20,7 @@ defineProps<{
 }>()
 
 const labels = SharedConfig.get().labels
+const isWide = TableViewState.isWide
 </script>
 
 <template>
@@ -42,20 +44,30 @@ const labels = SharedConfig.get().labels
       <span v-if="isLoading" class="t__shimmer" aria-hidden="true" />
     </td>
 
-    <td
-      v-for="cell in row.getVisibleCells()"
-      :key="cell.id"
-      class="t__td"
-      :style="cell.column.columnDef.meta?.align ? { textAlign: cell.column.columnDef.meta.align } : undefined"
-    >
-      <div class="t__cell">
-        <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-      </div>
-      <!-- Другий рядок колонки (meta.sub). Компактна щільність його ховає. -->
-      <div v-if="cell.column.columnDef.meta?.sub" class="t__sub">
-        <FlexRender :render="cell.column.columnDef.meta.sub.cell" :props="cell.getContext()" />
-      </div>
-    </td>
+    <template v-for="cell in row.getVisibleCells()" :key="cell.id">
+      <td
+        class="t__td"
+        :style="cell.column.columnDef.meta?.align ? { textAlign: cell.column.columnDef.meta.align } : undefined"
+      >
+        <div class="t__cell">
+          <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+        </div>
+        <!-- Другий рядок колонки (meta.sub): у стиснутому виді — під значенням. -->
+        <div v-if="cell.column.columnDef.meta?.sub && !isWide" class="t__sub">
+          <FlexRender :render="cell.column.columnDef.meta.sub.cell" :props="cell.getContext()" />
+        </div>
+      </td>
+      <!-- У розгорнутому — своя комірка поруч, звичайним текстом. -->
+      <td
+        v-if="cell.column.columnDef.meta?.sub && isWide"
+        class="t__td t__td--sub"
+        :style="cell.column.columnDef.meta?.align ? { textAlign: cell.column.columnDef.meta.align } : undefined"
+      >
+        <div class="t__cell">
+          <FlexRender :render="cell.column.columnDef.meta.sub.cell" :props="cell.getContext()" />
+        </div>
+      </td>
+    </template>
   </tr>
 </template>
 

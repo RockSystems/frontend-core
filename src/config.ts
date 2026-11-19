@@ -63,6 +63,11 @@ export type SharedLabels = {
     tableShownShort: (loaded: string) => string
     tableLoadingMore: string
     tableLoadFailed: string
+    /**
+     * Кнопка виду таблиці з другими рядками колонок: на що вона перемкне
+     * («Розгорнути таблицю» / «Стиснути таблицю»). Без них кнопка лише з іконкою.
+     */
+    tableView?: { toWide: string; toStacked: string }
     /** Рядок фільтрів. */
     resetFilters: string
     exportPreparing: string
@@ -158,19 +163,22 @@ export type SharedConfigValue = {
     /** Сбой, который ядро уже показало на месте (список фильтра): только в трекинг. */
     reportError?: (error: unknown) => void
     /**
-     * Де тримати щільність таблиць (акаунт, localStorage), реактивно. Без нього
-     * перемикача немає: таблиці з другими рядками колонок показують їх завжди.
+     * Своє сховище вибору виду таблиць (акаунт), реактивно. Необов'язкове: без
+     * нього ядро памʼятає вибір у браузері. З ним `get()` головний, а поки він
+     * `null` (налаштування ще не прийшли) — діє вибір із браузера.
      */
-    tableDensity?: {
-        get: () => TableDensity
-        set: (value: TableDensity) => void
-        /** Підписи кнопки: на що вона перемкне. */
-        labels: { toCompact: string; toComfortable: string }
+    tableView?: {
+        get: () => TableView | null
+        set: (value: TableView) => void
     }
 }
 
-/** Звичайно — з другими рядками колонок, компактно — лише основне, рядок нижчий. */
-export type TableDensity = 'comfortable' | 'compact'
+/**
+ * Вид таблиці з другими рядками колонок (`ctx.sub`): розгорнутий — кожна
+ * деталь своєю колонкою поруч зі своєю парою, стиснутий — деталь під основним
+ * значенням.
+ */
+export type TableView = 'wide' | 'stacked'
 
 let current: SharedConfigValue | null = null
 

@@ -1,6 +1,6 @@
 {
   "name": "@rock555/frontend-core",
-  "version": "3.6.1",
+  "version": "3.7.0",
   "description": "Спільне фронтове ядро: API-клієнт, таблиці, форми, модалки, хелпери",
   "license": "UNLICENSED",
   "repository": {

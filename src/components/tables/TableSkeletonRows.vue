@@ -9,6 +9,7 @@
 
 import type {} from '../../types/table'
 import type { Column } from '@tanstack/vue-table'
+import { TableViewState } from './tableView'
 
 interface Props {
   /**
@@ -23,18 +24,25 @@ interface Props {
 }
 
 defineProps<Props>()
+
+const isWide = TableViewState.isWide
 </script>
 
 <template>
   <tr v-for="i in rowsCount" :key="`skel-${i}`" class="t__row t__row--skeleton">
     <td v-if="hasLeadingCell" class="t__td t__td--toggle"></td>
-    <td
-      v-for="col in columns"
-      :key="col.id"
-      class="t__td"
-      :style="col.columnDef.meta?.align ? { textAlign: col.columnDef.meta.align } : undefined"
-    >
-      <span class="t__skeleton-bar" />
-    </td>
+    <template v-for="col in columns" :key="col.id">
+      <td class="t__td" :style="col.columnDef.meta?.align ? { textAlign: col.columnDef.meta.align } : undefined">
+        <span class="t__skeleton-bar" />
+      </td>
+      <!-- Розгорнутий вид: другий рядок колонки — своя комірка, як у TableBodyRow. -->
+      <td
+        v-if="col.columnDef.meta?.sub && isWide"
+        class="t__td"
+        :style="col.columnDef.meta?.align ? { textAlign: col.columnDef.meta.align } : undefined"
+      >
+        <span class="t__skeleton-bar" />
+      </td>
+    </template>
   </tr>
 </template>
