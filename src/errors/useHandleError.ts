@@ -6,26 +6,32 @@ import { AppError } from '../api/errors'
 import { SharedConfig } from '../config'
 import { ActionCancelledError } from './actionCancelled'
 import { ApiErrorHelper } from './apiError.helper'
+import { FormErrorScope } from './formErrorScope'
 
 export function handleApiError(error: unknown): void {
   // Скасований запит — не помилка: ми самі обірвали застарілий при зміні фільтра.
   if (axios.isCancel(error)) return
   // Людина закрила діалог, без якого дію не виконати.
   if (error instanceof ActionCancelledError) return
-
   // Перехоплювач загортає все, що прийшло з мережі, в AppError. Решта — баг нашого коду.
   if (!(error instanceof AppError)) console.error('-- Unhandled error --', error)
 
-  const text = ApiErrorHelper.message(error)
-  // Однакова помилка (ретраї, кілька запитів) — один тост, а не стос.
-  const codes = error instanceof AppError
-    ? (error.problem?.errors ?? []).map(({ code }) => code).sort().join(',')
-    : ''
+  const notify = (): void => {
+    const text = ApiErrorHelper.message(error)
+    // Однакова помилка (ретраї, кілька запитів) — один тост, а не стос.
+    const codes = error instanceof AppError
+      ? (error.problem?.errors ?? []).map(({ code }) => code).sort().join(',')
+      : ''
 
-  SharedConfig.get().notifyError(text, {
-    id: error instanceof AppError ? `${error.status}:${codes}:${text}` : text,
-    isSessionExpired: ApiErrorHelper.isSessionExpired(error),
-  })
+    SharedConfig.get().notifyError(text, {
+      id: error instanceof AppError ? `${error.status}:${codes}:${text}` : text,
+      isSessionExpired: ApiErrorHelper.isSessionExpired(error),
+    })
+  }
+
+  // Іде сабміт форми: помилку поля вона покаже під полем; тост — лише якщо не покаже.
+  if (FormErrorScope.defer(error, notify)) return
+  notify()
 }
 
 export function useHandleError() {

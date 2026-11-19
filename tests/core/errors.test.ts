@@ -4,6 +4,7 @@ import { ApiProblemHelper } from '../../src/api/errors/apiProblem'
 import { SharedConfig } from '../../src/config'
 import { ActionCancelledError } from '../../src/errors/actionCancelled'
 import { ApiErrorHelper } from '../../src/errors/apiError.helper'
+import { FormErrorScope } from '../../src/errors/formErrorScope'
 import { handleApiError } from '../../src/errors/useHandleError'
 
 const notifyError = vi.fn()
@@ -172,5 +173,44 @@ describe('handleApiError', () => {
     expect(log).toHaveBeenCalled()
     expect(notifyError).toHaveBeenCalledWith('something went wrong', expect.objectContaining({ isSessionExpired: false }))
     log.mockRestore()
+  })
+})
+
+describe('form errors: a field error under the field, a form error in a toast', () => {
+  const shown = ['name', 'payment_date', 'month']
+  const fieldError = () => apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name'), validation('payment_date')] })
+
+  it('fits the form only when every entry lands on a shown field', () => {
+    expect(ApiErrorHelper.fitsForm(fieldError(), shown)).toBe(true)
+    // Поле є у схемі, але не на екрані (не в shown) — це помилка форми.
+    expect(ApiErrorHelper.fitsForm(fieldError(), ['name'])).toBe(false)
+    expect(ApiErrorHelper.fitsForm(apiError(422, { code: 'BUSINESS_RULE_VIOLATION', errors: [{ code: 'NOT_ENOUGH', meta: { left: 1 } }] }), shown)).toBe(false)
+    expect(ApiErrorHelper.fitsForm(new AppError(500, 'x'), shown)).toBe(false)
+  })
+
+  it('skips the toast for an error the form claimed', async () => {
+    const error = fieldError()
+
+    await FormErrorScope.run(async (claim) => {
+      handleApiError(error)
+      claim(error)
+    })
+
+    expect(notifyError).not.toHaveBeenCalled()
+  })
+
+  it('toasts at the end what the form did not claim: form errors, swallowed errors, other requests', async () => {
+    await FormErrorScope.run(async () => {
+      handleApiError(fieldError())
+      expect(notifyError).not.toHaveBeenCalled()
+    })
+
+    expect(notifyError).toHaveBeenCalledTimes(1)
+  })
+
+  it('toasts straight away when no form is submitting', () => {
+    handleApiError(fieldError())
+
+    expect(notifyError).toHaveBeenCalledTimes(1)
   })
 })
