@@ -1,11 +1,12 @@
 // Форма проєкту: `useMyForm` + одна політика помилок сабміту.
 //
 // Колбек `handleSubmit` описує лише успішний шлях. Відмову бека віддаємо формі
-// (422 → поля), а вікно лишається відкритим з набраним. Помилка поля — лише під
-// полем: поки сабміт іде, onError мутації її не тостить (`FormErrorScope`); помилку
-// форми в цілому тостить. Політика тут, а не try/catch у кожній модалці: там закрити
+// (422 → поля), а вікно лишається відкритим з набраним. Помилка поля — під полем,
+// з фокусом і прокруткою до першого такого поля; помилка форми в цілому — тостом
+// (`FormErrorScope`). Політика тут, а не try/catch у кожній модалці: там закрити
 // вікно на помилці було одним рядком — і так губили введене.
 
+import { nextTick } from 'vue'
 import { useFieldArray } from 'vee-validate'
 import type { z } from 'zod'
 import { AppError } from '../api/errors'
@@ -31,42 +32,59 @@ export function useAppForm<T extends z.ZodTypeAny>(schema: T, config: AppFormCon
   const { errorPaths, ...formConfig } = config
   const { handleSubmit: vvHandleSubmit, ...form } = useMyForm(schema, formConfig)
 
-  /** Віддати помилку формі — для сабміту, що ловить її сам (повтор, плитки чеків). */
-  function showError(error: unknown): void {
+  /**
+   * Віддати помилку формі — для сабміту, що ловить її сам (повтор, плитки чеків).
+   * `true` — уся відмова лягла в поля форми, тост не потрібен.
+   */
+  function showError(error: unknown): boolean {
     // Скасування (закрили діалог, без якого дію не виконати) — тихо стоїмо.
-    if (error instanceof ActionCancelledError) return
+    if (error instanceof ActionCancelledError) return true
     // Не відповідь бека — баг у нашому коді: не ковтаємо, хай дійде до консолі.
     if (!(error instanceof AppError)) throw error
 
     const paths = errorPaths?.(form.fNames, form.values) ?? {}
+    const fieldPaths = paths.fieldPaths ?? form.fieldPaths
 
-    ApiErrorHelper.applyToForm(
-      error,
-      { setErrors: form.setErrors, fieldPaths: paths.fieldPaths ?? form.fieldPaths },
-      paths.map,
-    )
-  }
+    ApiErrorHelper.applyToForm(error, { setErrors: form.setErrors, fieldPaths }, paths.map)
+    focusFirstError()
 
-  /** Відмова ляже вся в поля цієї форми — тоді її показує форма, а не тост. */
-  function fitsForm(error: unknown): boolean {
-    const paths = errorPaths?.(form.fNames, form.values) ?? {}
-    return ApiErrorHelper.fitsForm(error, paths.fieldPaths ?? form.fieldPaths, paths.map)
+    return ApiErrorHelper.fitsForm(error, fieldPaths, paths.map)
   }
 
   function handleSubmit(fn: (values: z.infer<T>) => Promise<unknown>) {
-    const run = vvHandleSubmit(async (values) => {
-      try {
-        await FormErrorScope.run(fitsForm, () => fn(values))
-      } catch (error) {
-        showError(error)
-      }
-    })
+    const run = vvHandleSubmit(
+      (values) =>
+        FormErrorScope.run(async (claim) => {
+          try {
+            await fn(values)
+          } catch (error) {
+            if (showError(error)) claim(error)
+          }
+        }),
+      // Схема не пропустила — так само до першого поля з помилкою.
+      () => focusFirstError(),
+    )
 
     // Повторний Enter, поки йде перший запит, не шле другий.
     return (event?: Event) => (form.isSubmitting.value ? Promise.resolve() : run(event))
   }
 
   return { ...form, handleSubmit, showError }
+}
+
+/**
+ * До першого поля з помилкою: прокрутити до нього й поставити фокус — людина одразу бачить,
+ * що виправити. Форма — остання на сторінці (модалка поверх інших); помилку показує SmartField.
+ */
+function focusFirstError(): void {
+  void nextTick(() => {
+    const forms = document.querySelectorAll('form')
+    const field = forms[forms.length - 1]?.querySelector('.ui-errors')?.closest('.smart-field, .segmented-control')
+    if (!field) return
+
+    field.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    field.querySelector<HTMLElement>('input, select, textarea, button')?.focus({ preventScroll: true })
+  })
 }
 
 /** Повторюваний блок полів форми (інтервали дня, рядки чека). */

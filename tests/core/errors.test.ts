@@ -177,31 +177,39 @@ describe('handleApiError', () => {
 })
 
 describe('form errors: a field error under the field, a form error in a toast', () => {
-  const fields = ['name', 'payment_date', 'month']
-  const fits = (error: unknown) => ApiErrorHelper.fitsForm(error, fields)
+  const shown = ['name', 'payment_date', 'month']
+  const fieldError = () => apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name'), validation('payment_date')] })
 
-  it('skips the toast while a form shows every entry under its fields', async () => {
-    const error = apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name'), validation('payment_date')] })
+  it('fits the form only when every entry lands on a shown field', () => {
+    expect(ApiErrorHelper.fitsForm(fieldError(), shown)).toBe(true)
+    // Поле є у схемі, але не на екрані (не в shown) — це помилка форми.
+    expect(ApiErrorHelper.fitsForm(fieldError(), ['name'])).toBe(false)
+    expect(ApiErrorHelper.fitsForm(apiError(422, { code: 'BUSINESS_RULE_VIOLATION', errors: [{ code: 'NOT_ENOUGH', meta: { left: 1 } }] }), shown)).toBe(false)
+    expect(ApiErrorHelper.fitsForm(new AppError(500, 'x'), shown)).toBe(false)
+  })
 
-    await FormErrorScope.run(fits, async () => handleApiError(error))
+  it('skips the toast for an error the form claimed', async () => {
+    const error = fieldError()
+
+    await FormErrorScope.run(async (claim) => {
+      handleApiError(error)
+      claim(error)
+    })
 
     expect(notifyError).not.toHaveBeenCalled()
   })
 
-  it('toasts an entry that has no field or a field the form does not have', async () => {
-    const formWide = apiError(422, { code: 'BUSINESS_RULE_VIOLATION', errors: [{ code: 'NOT_ENOUGH', meta: { left: 1 } }] })
-    const unknownField = apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name'), validation('vin')] })
-
-    await FormErrorScope.run(fits, async () => {
-      handleApiError(formWide)
-      handleApiError(unknownField)
+  it('toasts at the end what the form did not claim: form errors, swallowed errors, other requests', async () => {
+    await FormErrorScope.run(async () => {
+      handleApiError(fieldError())
+      expect(notifyError).not.toHaveBeenCalled()
     })
 
-    expect(notifyError).toHaveBeenCalledTimes(2)
+    expect(notifyError).toHaveBeenCalledTimes(1)
   })
 
-  it('toasts field errors again once the form is not submitting', () => {
-    handleApiError(apiError(422, { code: 'VALIDATION_FAILED', errors: [validation('name')] }))
+  it('toasts straight away when no form is submitting', () => {
+    handleApiError(fieldError())
 
     expect(notifyError).toHaveBeenCalledTimes(1)
   })
