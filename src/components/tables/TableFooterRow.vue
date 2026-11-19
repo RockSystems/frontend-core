@@ -13,6 +13,7 @@
 import type {} from '../../types/table'
 import { FlexRender, Header, type HeaderGroup } from '@tanstack/vue-table'
 import { computed } from 'vue'
+import { TableViewState } from './tableView'
 
 interface Props {
   footerGroup: HeaderGroup<TData>
@@ -38,22 +39,31 @@ const getFooterClass = (header: Header<TData, unknown>) => {
 // вилазила за картку. Текст стоїть на тому ж місці, а ширину колонки задають
 // рядки. Ячейку з підсумком не забираємо — на неї текст не наїде. Підсумок
 // праворуч чи по центру не розтягуємо: він з'їхав би від своєї колонки.
+// У розгорнутому виді другий рядок колонки — ще одна комірка одразу після неї.
+const subCells = (header: Header<TData, unknown>) => TableViewState.span(header.column) - 1
+
 const cells = computed(() => {
   const headers = props.footerGroup.headers
-  const result: { header: Header<TData, unknown>, colSpan: number }[] = []
+  const result: { key: string, header: Header<TData, unknown> | null, colSpan: number }[] = []
 
   for (let i = 0; i < headers.length; i++) {
     const header = headers[i]
     const align = header.column.columnDef.meta?.align
     let colSpan = header.colSpan
+    let tail = subCells(header)
 
     if (header.column.columnDef.footer && (!align || align === 'left')) {
+      colSpan += tail
+      tail = 0
       while (i + 1 < headers.length && !headers[i + 1].column.columnDef.footer) {
-        colSpan += headers[++i].colSpan
+        const next = headers[++i]
+        colSpan += next.colSpan + subCells(next)
       }
     }
 
-    result.push({ header, colSpan })
+    result.push({ key: header.id, header, colSpan })
+    // Підсумок праворуч не розтягуємо на комірку другого рядка — лишаємо її порожньою.
+    if (tail > 0) result.push({ key: `${header.id}:sub`, header: null, colSpan: tail })
   }
 
   return result
@@ -63,14 +73,14 @@ const cells = computed(() => {
 <template>
   <tr class="t__row t__row--totals">
     <td v-if="hasLeadingCell" class="t__td t__td--toggle"></td>
-    <td v-for="{ header, colSpan } in cells"
-        :key="header.id"
+    <td v-for="{ key, header, colSpan } in cells"
+        :key="key"
         class="t__td"
-        :class="getFooterClass(header)"
+        :class="header ? getFooterClass(header) : undefined"
         :colspan="colSpan > 1 ? colSpan : undefined"
-        :style="header.column.columnDef.meta?.align ? { textAlign: header.column.columnDef.meta.align } : undefined"
+        :style="header?.column.columnDef.meta?.align ? { textAlign: header.column.columnDef.meta.align } : undefined"
     >
-      <FlexRender :render="header.column.columnDef.footer" :props="header.getContext()" />
+      <FlexRender v-if="header" :render="header.column.columnDef.footer" :props="header.getContext()" />
     </td>
   </tr>
 </template>

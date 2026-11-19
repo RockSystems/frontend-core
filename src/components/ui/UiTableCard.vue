@@ -6,12 +6,13 @@
 // людина шукала кнопку скидання вгорі й оновлювала всю сторінку.
 
 import { SharedConfig } from '../../config'
-import { CircleAlert, FunnelX, Inbox, Rows2, Rows3, RotateCw, SearchX } from '@lucide/vue'
+import { CircleAlert, FoldHorizontal, FunnelX, Inbox, RotateCw, SearchX, UnfoldHorizontal } from '@lucide/vue'
 import { computed, provide, ref } from 'vue'
 import UiButton from './UiButton.vue'
 import UiIconButton from './UiIconButton.vue'
 import type { ResettableFilters } from '../../composables/useServerList'
 import { TABLE_CARD_KEY } from '../tables/tableCard.context'
+import { TableViewState } from '../tables/tableView'
 
 withDefaults(defineProps<{
   isEmpty: boolean
@@ -35,27 +36,23 @@ withDefaults(defineProps<{
   errorText: () => SharedConfig.get().labels.tableLoadFailed,
 })
 
-// Щільність: перемикач — лише в таблиці з другими рядками колонок (її шапка
-// реєструється сама) і лише коли проєкт дав, де тримати вибір.
-const stackedCount = ref(0)
+// Кнопка виду — у таблиці з другими рядками колонок: її шапка реєструється сама.
+const subRowsCount = ref(0)
 provide(TABLE_CARD_KEY, {
-  registerStacked: () => {
-    stackedCount.value++
-    return () => { stackedCount.value-- }
+  registerSubRows: () => {
+    subRowsCount.value++
+    return () => { subRowsCount.value-- }
   },
 })
 
-const density = SharedConfig.get().tableDensity
-const isDensitySwitchable = computed(() => density !== undefined && stackedCount.value > 0)
-const isCompact = computed(() => isDensitySwitchable.value && density?.get() === 'compact')
-
-function toggleDensity(): void {
-  density?.set(isCompact.value ? 'comfortable' : 'compact')
-}
+const hasViewSwitch = computed(() => subRowsCount.value > 0)
+const viewLabels = SharedConfig.get().labels.tableView
+// Підпис — на що кнопка перемкне.
+const viewSwitchLabel = computed(() => TableViewState.isWide.value ? viewLabels?.toStacked : viewLabels?.toWide)
 </script>
 
 <template>
-  <section class="ui-table-card" :class="{ 'ui-table-card--fit': isFitContent, 'ui-table-card--compact': isCompact }">
+  <section class="ui-table-card" :class="{ 'ui-table-card--fit': isFitContent }">
     <div v-if="isError" class="ui-table-card__state ui-table-card__state--error" role="alert">
       <CircleAlert :size="20" class="ui-table-card__icon" />
       <p class="ui-table-card__text">{{ errorText }}</p>
@@ -83,20 +80,19 @@ function toggleDensity(): void {
       <slot />
     </div>
 
-    <!-- Перемикач — у смузі підвалу праворуч, з тією ж рамкою й фоном: лінія
+    <!-- Кнопка — у смузі підвалу праворуч, з тією ж рамкою й фоном: лінія
          підвалу йде суцільна, а лічильник чи пейджер лишаються ліворуч. -->
-    <div v-if="isDensitySwitchable && !isEmpty && !isError" class="ui-table-card__bottom">
+    <div v-if="hasViewSwitch && !isEmpty && !isError" class="ui-table-card__bottom">
       <div class="ui-table-card__footer"><slot name="footer" /></div>
-      <div class="ui-table-card__density">
+      <div class="ui-table-card__view">
         <UiIconButton
           variant="ghost"
           tone="muted"
-          :aria-pressed="isCompact"
-          :aria-label="isCompact ? density?.labels.toComfortable : density?.labels.toCompact"
-          :title="isCompact ? density?.labels.toComfortable : density?.labels.toCompact"
-          @click="toggleDensity"
+          :aria-label="viewSwitchLabel"
+          :title="viewSwitchLabel"
+          @click="TableViewState.toggle()"
         >
-          <component :is="isCompact ? Rows2 : Rows3" :size="16" />
+          <component :is="TableViewState.isWide.value ? FoldHorizontal : UnfoldHorizontal" :size="16" />
         </UiIconButton>
       </div>
     </div>
@@ -163,7 +159,7 @@ function toggleDensity(): void {
     min-width: 0;
   }
 
-  &__density {
+  &__view {
     display: flex;
     align-items: center;
     padding: 0 8px;
