@@ -22,6 +22,9 @@ defineProps<{
 // Поле, которое ставит себе :id="inputId" из слота, получает связь с подписью:
 // клик по ней ставит фокус, читалка экрана называет поле.
 const inputId = useId();
+// Помилка звʼязана з полем (`aria-describedby`), і поле позначене `aria-invalid`:
+// читалка каже «невірно» й читає текст помилки, коли фокус на полі. Те саме їде в `field`.
+const errorsId = `${inputId}-errors`;
 </script>
 
 <template>
@@ -51,8 +54,18 @@ const inputId = useId();
           </TooltipRoot>
         </TooltipProvider>
       </span>
-      <slot v-bind="vee" :field="{ ...vee.field, id: inputId }" :input-id="inputId"></slot>
-      <span class="ui-errors" v-if="vee.errors.length">
+      <slot
+          v-bind="vee"
+          :field="{
+            ...vee.field,
+            id: inputId,
+            'aria-invalid': vee.errors.length ? true : undefined,
+            'aria-describedby': vee.errors.length ? errorsId : undefined,
+          }"
+          :input-id="inputId"
+      ></slot>
+      <!-- role="alert": читалка називає помилку, щойно вона зʼявилась (сабміт, blur). -->
+      <span :id="errorsId" class="ui-errors" role="alert" v-if="vee.errors.length">
         <span class="ui-error" v-for="err in vee.errors" :key="err">
           {{ err }}
         </span>
