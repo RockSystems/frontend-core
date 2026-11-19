@@ -41,7 +41,7 @@ const uid = useId();
           </label>
         </div>
       </div>
-      <span class="ui-errors" v-if="errors.length">
+      <span class="ui-errors" role="alert" v-if="errors.length">
         <span class="ui-error" v-for="err in errors" :key="err">
           {{ err }}
         </span>
