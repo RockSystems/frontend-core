@@ -132,7 +132,8 @@ export function useVirtualTable(options: {
     fitTable(own)
     // Висота шапки — плашці «скинути ширину» в куті (UiTableCard): заголовки в
     // один рядок, тож після заморозки вона не змінюється.
-    table.parentElement?.style.setProperty('--t-head-h', `${table.tHead?.offsetHeight ?? 0}px`)
+    // Дробна, як є: округлена зсувала нижню лінію плашки на пів пікселя від лінії шапки.
+    table.parentElement?.style.setProperty('--t-head-h', `${table.tHead?.getBoundingClientRect().height ?? 0}px`)
     table.classList.add('t--frozen')
     table.classList.toggle('t--resizable', options.widthsKey !== undefined)
     isWidthsWarm.value = true
