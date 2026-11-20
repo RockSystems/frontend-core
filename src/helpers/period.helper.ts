@@ -5,12 +5,15 @@
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear'
 import { DateHelper } from './date.helper'
+import type { PeriodPresetId } from './periodPresets.helper'
 
 dayjs.extend(quarterOfYear)
 
 export interface Period {
   from: string
   to: string
+  /** Обрано відносним пресетом: адреса й збережений вигляд тримають код, а не дати. */
+  preset?: PeriodPresetId
 }
 
 /** Масштаб периода: календарная единица, которой он в точности равен, либо произвольный `range`. */

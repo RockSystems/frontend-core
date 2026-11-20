@@ -16,6 +16,7 @@
 import { UrlStateHelper, type UrlReader, type UrlValue } from './urlState.helper'
 import type { ServerSortEntry, SortDirection } from '../composables/useServerTable'
 import { MonthHelper } from './month.helper'
+import { PeriodPresetsHelper } from './periodPresets.helper'
 import { UrlParamsHelper, type UrlPeriod } from './urlParams.helper'
 
 /**
@@ -41,6 +42,11 @@ export interface UrlSchema<S extends UrlShape> {
   write: (state: UrlState<S>) => void
   /** Стан чистої адреси: до нього веде «Скинути фільтри». */
   blank: () => UrlState<S>
+  /**
+   * Ключі адреси, якими володіє схема. Збережений вигляд сторінки — саме вони;
+   * решта адреси (відкрита картка, вкладка) до вигляду не належить.
+   */
+  readonly keys: readonly string[]
 }
 
 /**
@@ -68,9 +74,23 @@ export class UrlSchemaHelper {
       return state
     }
 
+    // Кодек пише свої ключі й для порожнього значення (null — прибрати з адреси),
+    // тож запис чистого стану перелічує їх усі. Ліниво: схеми створюються при
+    // імпорті модуля, а ключі потрібні лише виглядам.
+    let keys: string[] | null = null
+
     return {
       read: () => readFrom(UrlStateHelper.readUrl()),
       blank: () => readFrom(UrlStateHelper.EMPTY_READER),
+
+      get keys(): readonly string[] {
+        if (!keys) {
+          const blank = readFrom(UrlStateHelper.EMPTY_READER)
+          keys = [...new Set(entries.flatMap(([field, codec]) => Object.keys(codec.write(blank[field]))))]
+        }
+
+        return keys
+      },
 
       write: (state) => {
         const updates: Record<string, UrlValue> = {}
@@ -84,11 +104,23 @@ export class UrlSchemaHelper {
     }
   }
 
-  /** ?from=&to= — одне поле стану на два ключі (див. UrlParamsHelper.period). */
-  static period(fromKey = 'from', toKey = 'to'): UrlCodec<UrlPeriod | null> {
+  /**
+   * ?from=&to= — одне поле стану на два ключі (див. UrlParamsHelper.period).
+   * Період із пресету пишеться кодом (`range=thisMonth`) замість дат: посилання
+   * й збережений вигляд відкриються на поточний місяць, а не на той, коли їх
+   * зберегли.
+   */
+  static period(fromKey = 'from', toKey = 'to', rangeKey = 'range'): UrlCodec<UrlPeriod | null> {
     return {
-      read: params => UrlParamsHelper.period(params, fromKey, toKey),
-      write: value => ({ [fromKey]: value?.from ?? null, [toKey]: value?.to ?? null }),
+      read: (params) => {
+        const range = params.get(rangeKey)
+        if (range && PeriodPresetsHelper.isId(range)) return PeriodPresetsHelper.resolve(range)
+
+        return UrlParamsHelper.period(params, fromKey, toKey)
+      },
+      write: value => value?.preset
+        ? { [rangeKey]: value.preset, [fromKey]: null, [toKey]: null }
+        : { [rangeKey]: null, [fromKey]: value?.from ?? null, [toKey]: value?.to ?? null },
     }
   }
 

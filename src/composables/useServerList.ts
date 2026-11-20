@@ -126,7 +126,7 @@ export function useServerInfiniteList<
   TDebounced extends TextKeys<TState> = never,
   TDefaults extends FilterKeys<TState> = never,
 >(config: ServerInfiniteListConfig<TState, TParams, TResponse, TRow, TDebounced, TDefaults>) {
-  const { filters, state, params } = useListState(config)
+  const { filters, state, params, load } = useListState(config)
 
   // Сторінки в адресі немає: посилання завжди відкриває список з початку.
   function syncUrl(): void {
@@ -134,11 +134,20 @@ export function useServerInfiniteList<
     config.url.write(config.toUrl ? config.toUrl(next) : next)
   }
 
+  /**
+   * Фільтри заново з адреси, як при першому відкритті. Стор живе довше за
+   * сторінку: без цього посилання чи збережений вигляд, відкриті поверх уже
+   * створеного стора, перезаписав би його старий стан.
+   */
+  function readUrl(): void {
+    load(config.fromUrl ? config.fromUrl(config.url.read()) : config.url.read())
+  }
+
   watch(state, syncUrl, { deep: true })
 
   const { data, query } = useInfiniteRows(config, params)
 
-  return { filters, data, syncUrl, state, params, query }
+  return { filters, data, syncUrl, readUrl, state, params, query }
 }
 
 /**
@@ -313,6 +322,17 @@ function useListState<
     }
   }
 
+  /** Увесь стан з прочитаної адреси: чого в ній немає — з `defaults`, як при першому відкритті. */
+  function load(next: TState): void {
+    for (const field of Object.keys(values)) {
+      const fallback = (config.defaults as Record<string, (() => unknown) | undefined> | undefined)?.[field]
+      const value = structuredClone(next[field] ?? fallback?.() ?? next[field])
+      const draft = drafts[`${field}Draft`]
+      if (draft) draft.value = value as string
+      values[field].value = value
+    }
+  }
+
   /** Знімок відставлених значень — те, що йде в запит і в адресу. */
   const state = computed(() => {
     const snapshot: Record<string, unknown> = {}
@@ -324,7 +344,7 @@ function useListState<
 
   const filters = { ...values, ...drafts, ...setters, isFiltered, reset } as unknown as ListFilters<WithDefaults<TState, TDefaults>, TDebounced>
 
-  return { initial, filters, state, params }
+  return { initial, filters, state, params, load }
 }
 
 /** Сортування — не фільтр: скидання його не чіпає. */
