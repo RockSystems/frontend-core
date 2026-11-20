@@ -223,6 +223,55 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  // Звужену руками колонку заголовок не перелазить — обрізається так само.
+  .t__th {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// Межа колонки для зміни ширини (useVirtualTable з `widthsKey`). Тиха: проявляється,
+// лише коли курсор над шапкою; в останньої колонки межі немає — віддати ширину нікому.
+.t__resize { display: none; }
+
+.t--resizable.t--frozen .t__th[data-col]:not(:last-child) .t__resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: block;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+
+  &::after {
+    position: absolute;
+    top: 25%;
+    right: 0;
+    width: 1px;
+    height: 50%;
+    content: '';
+  }
+}
+
+// Той самий префікс, що й вище: інакше база перебила б підсвітку специфічністю.
+.t--resizable.t--frozen thead:hover .t__th[data-col]:not(:last-child) .t__resize::after {
+  background: $color-border-strong;
+}
+
+.t--resizable.t--frozen .t__th[data-col]:not(:last-child) .t__resize:hover::after,
+.t--resizable.t--frozen .t__th[data-col]:not(:last-child) .t__resize.is-active::after {
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: $color-accent;
+}
+
+// Поки тягнуть межу: курсор не мигає, а текст сторінки не виділяється.
+body.t-resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 // Розгорнутий вид: другий рядок — своя колонка, але так само в один рядок, як і
