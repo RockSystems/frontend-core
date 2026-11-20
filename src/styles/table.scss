@@ -232,10 +232,10 @@
 }
 
 // Межа колонки для зміни ширини (useVirtualTable з `widthsKey`). Тиха: проявляється,
-// лише коли курсор над шапкою; в останньої колонки межі немає — віддати ширину нікому.
+// лише коли курсор над шапкою.
 .t__resize { display: none; }
 
-.t--resizable.t--frozen .t__th[data-col]:not(:last-child) .t__resize {
+.t--resizable.t--frozen .t__th[data-col] .t__resize {
   position: absolute;
   top: 0;
   right: 0;
@@ -256,12 +256,21 @@
 }
 
 // Той самий префікс, що й вище: інакше база перебила б підсвітку специфічністю.
-.t--resizable.t--frozen thead:hover .t__th[data-col]:not(:last-child) .t__resize::after {
+.t--resizable.t--frozen thead:hover .t__th[data-col] .t__resize::after {
   background: $color-border-strong;
 }
 
-.t--resizable.t--frozen .t__th[data-col]:not(:last-child) .t__resize:hover::after,
-.t--resizable.t--frozen .t__th[data-col]:not(:last-child) .t__resize.is-active::after {
+.t--resizable.t--frozen .t__th[data-col] .t__resize:hover::after,
+.t--resizable.t--frozen .t__th[data-col] .t__resize.is-active::after {
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: $color-accent;
+}
+
+// Наведено на «скинути ширину» (UiTableCard): межі колонок, які він поверне,
+// світяться, як під час перетягування, — видно, що саме скинеться.
+.t-widths-preview .t--resizable.t--frozen .t__th[data-col][data-own] .t__resize::after {
   top: 0;
   width: 2px;
   height: 100%;
