@@ -214,8 +214,15 @@ export function useInfiniteRows<TParams, TResponse, TRow = RowOf<TResponse>>(
 
       return page.meta?.total ?? page.total ?? 0
     }),
+    /** Іде будь-який запит, і наступна порція теж. */
     isLoading: query.isFetching,
     isLoadingMore: query.isFetchingNextPage,
+    /**
+     * Вибірку перечитують (інший фільтр, оновлення після дії): рядки на екрані
+     * застаріли — їх і притінює `TableBodyRow`. Наступна порція — не те: уже
+     * завантажені рядки свіжі, і блимати ними нема чого.
+     */
+    isRefreshing: computed(() => query.isFetching.value && !query.isFetchingNextPage.value),
     hasMore: query.hasNextPage,
     isError: query.isError,
     /** Наступна порція, якщо є і жоден запит зараз не йде (посеред іншого її проігнорують). */

@@ -15,8 +15,13 @@ import type {} from '../../types/table'
 import { Info } from '@lucide/vue'
 import { FlexRender, type HeaderGroup } from '@tanstack/vue-table'
 import { computed, inject, watchEffect } from 'vue'
+import { SharedConfig } from '../../config'
 import { TABLE_CARD_KEY } from './tableCard.context'
 import { TableViewState } from './tableView'
+
+// Межа колонки для зміни ширини. Тягне й зберігає useVirtualTable; тут лише
+// місце й id колонки (`data-col`), а видно межу, лише коли таблиця це вміє.
+const resizeTitle = SharedConfig.get().labels.columnResize
 
 interface Props {
   headerGroup: HeaderGroup<TData>
@@ -77,6 +82,7 @@ watchEffect((onCleanup) => {
         class="t__th"
         :class="{ 't__th--sortable': header.column.getCanSort() }"
         :style="alignOf(header)"
+        :data-col="header.column.id"
         @click="onSort(header)"
       >
         <!-- t__th-stack — каркас дворядкової шапки стиснутого виду: другий рядок
@@ -117,6 +123,7 @@ watchEffect((onCleanup) => {
             <span v-else class="t__th-sub">{{ subOf(header)?.header }}</span>
           </template>
         </span>
+        <span class="t__resize" :title="resizeTitle" @click.stop />
       </th>
 
       <!-- Розгорнутий вид: другий рядок — своя колонка зі своєю назвою й сортуванням. -->
@@ -125,6 +132,7 @@ watchEffect((onCleanup) => {
         class="t__th"
         :class="{ 't__th--sortable': !!subColumnOf(header) }"
         :style="alignOf(header)"
+        :data-col="subOf(header)?.id"
         @click="onSubSort(header)"
       >
         {{ subOf(header)?.header }}
@@ -132,6 +140,7 @@ watchEffect((onCleanup) => {
           {{ subColumnOf(header)?.getIsSorted() === 'asc' ? '↑' : '↓' }}
           <sup v-if="isPrioShown(header)" class="t__sort-prio">{{ (subColumnOf(header)?.getSortIndex() ?? 0) + 1 }}</sup>
         </span>
+        <span class="t__resize" :title="resizeTitle" @click.stop />
       </th>
     </template>
   </tr>

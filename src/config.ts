@@ -68,6 +68,8 @@ export type SharedLabels = {
      * («Розгорнути таблицю» / «Стиснути таблицю»). Без них кнопка лише з іконкою.
      */
     tableView?: { toWide: string; toStacked: string }
+    /** Підказка на межі колонок у шапці: як змінити ширину й повернути автоматичну. */
+    columnResize?: string
     /** Рядок фільтрів. */
     resetFilters: string
     exportPreparing: string
@@ -171,7 +173,19 @@ export type SharedConfigValue = {
         get: () => TableView | null
         set: (value: TableView) => void
     }
+    /**
+     * Своє сховище ширин колонок, які користувач підтягнув руками (акаунт),
+     * реактивно, по ключу таблиці. Необов'язкове: без нього ядро памʼятає їх у
+     * браузері. `get()` повертає `null`, поки налаштування не прийшли.
+     */
+    columnWidths?: {
+        get: (tableKey: string) => ColumnWidths | null
+        set: (tableKey: string, widths: ColumnWidths) => void
+    }
 }
+
+/** Ширини колонок таблиці в пікселях за id колонки — лише ті, що змінили руками. */
+export type ColumnWidths = Record<string, number>
 
 /**
  * Вид таблиці з другими рядками колонок (`ctx.sub`): розгорнутий — кожна
