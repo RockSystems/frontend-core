@@ -70,6 +70,8 @@ export type SharedLabels = {
     tableView?: { toWide: string; toStacked: string }
     /** Підказка на межі колонок у шапці: як змінити ширину й повернути автоматичну. */
     columnResize?: string
+    /** Підказка значка в куті шапки: усім колонкам — автоматичну ширину. */
+    columnWidthsReset?: string
     /** Рядок фільтрів. */
     resetFilters: string
     exportPreparing: string

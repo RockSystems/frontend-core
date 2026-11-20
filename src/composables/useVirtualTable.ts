@@ -7,7 +7,8 @@
 
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import { useEventListener } from '@vueuse/core'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch, type Ref } from 'vue'
+import { TABLE_WIDTHS_KEY } from '../components/tables/tableCard.context'
 import { TableViewState } from '../components/tables/tableView'
 import { TableWidthsState } from '../components/tables/tableWidths'
 
@@ -102,7 +103,9 @@ export function useVirtualTable(options: {
   }
 
   function unfreezeWidths(): void {
-    options.table.value?.classList.remove('t--frozen')
+    const table = options.table.value
+    table?.classList.remove('t--frozen')
+    if (table) table.style.width = ''
     for (const cell of headerCells()) cell.style.width = ''
     isWidthsWarm.value = false
   }
@@ -126,6 +129,10 @@ export function useVirtualTable(options: {
       cell.style.boxSizing = 'border-box'
       cell.style.width = `${ownWidth(cell, own) ?? widths[index]}px`
     })
+    fitTable(own)
+    // Висота шапки — плашці «скинути ширину» в куті (UiTableCard): заголовки в
+    // один рядок, тож після заморозки вона не змінюється.
+    table.parentElement?.style.setProperty('--t-head-h', `${table.tHead?.offsetHeight ?? 0}px`)
     table.classList.add('t--frozen')
     table.classList.toggle('t--resizable', options.widthsKey !== undefined)
     isWidthsWarm.value = true
@@ -136,9 +143,10 @@ export function useVirtualTable(options: {
   watch([items, () => options.rows()[0]?.id, () => TableViewState.current.value], freezeWidths, { flush: 'post' })
 
   // === Ширини руками ========================================================
-  // Межа між колонками тягне обидві: ліва росте, права вужчає на стільки ж, тож
-  // таблиця лишається в ширину екрана, без прокрутки вбік. Подвійний клік по межі
-  // повертає лівій колонці автоматичну ширину.
+  // Як в Excel: межа тягне лише свою колонку, решта лишаються своєї ширини й
+  // зсуваються. Таблиця тоді шириною в суму колонок: ширша за картку —
+  // прокрутка вбік, вужча — порожньо праворуч. Подвійний клік по межі повертає
+  // колонці автоматичну ширину.
   const savedWidths = computed(() => (options.widthsKey ? TableWidthsState.get(options.widthsKey) : {}))
 
   function ownWidth(cell: HTMLTableCellElement, own: Record<string, number>): number | undefined {
@@ -146,24 +154,36 @@ export function useVirtualTable(options: {
     return column ? own[column] : undefined
   }
 
+  // Жодної своєї ширини — таблиця на всю картку, як без ручних ширин; інакше
+  // рівно сума колонок: на 100% браузер розкидав би різницю по всіх колонках.
+  // `data-own` — колонки, підтягнуті руками: їх підсвічує наведення на «скинути».
+  function fitTable(own: Record<string, number>): void {
+    const table = options.table.value
+    const cells = headerCells()
+    if (!table) return
+    for (const cell of cells) cell.toggleAttribute('data-own', ownWidth(cell, own) !== undefined)
+    const hasOwn = cells.some(cell => cell.hasAttribute('data-own'))
+    table.style.width = hasOwn ? `${cells.reduce((sum, cell) => sum + parseFloat(cell.style.width), 0)}px` : ''
+  }
+
+  let drag: {
+    handle: Element
+    cell: HTMLTableCellElement
+    startX: number
+    startWidth: number
+    tableWidth: number
+    isMoved: boolean
+  } | null = null
+
   // Ширини з акаунта приїхали після заміру — кладемо їх поверх заміряних.
   watch(savedWidths, (own) => {
-    if (!isWidthsWarm.value) return
+    if (!isWidthsWarm.value || drag) return
     for (const cell of headerCells()) {
       const width = ownWidth(cell, own)
       if (width !== undefined) cell.style.width = `${width}px`
     }
+    fitTable(own)
   })
-
-  let drag: {
-    handle: Element
-    left: HTMLTableCellElement
-    right: HTMLTableCellElement
-    startX: number
-    leftWidth: number
-    total: number
-    isMoved: boolean
-  } | null = null
 
   function handleOf(event: Event): Element | null {
     return event.target instanceof Element ? event.target.closest('.t__resize') : null
@@ -171,66 +191,80 @@ export function useVirtualTable(options: {
 
   useEventListener(options.table, 'pointerdown', (event: PointerEvent) => {
     const handle = handleOf(event)
-    const left = handle?.closest('th')
-    const right = left?.nextElementSibling
-    if (!handle || !options.widthsKey || !isWidthsWarm.value || event.button !== 0) return
-    if (!(left instanceof HTMLTableCellElement) || !(right instanceof HTMLTableCellElement) || !right.dataset.col) return
+    const cell = handle?.closest('th')
+    const table = options.table.value
+    if (!handle || !table || !options.widthsKey || !isWidthsWarm.value || event.button !== 0) return
+    if (!(cell instanceof HTMLTableCellElement) || !cell.dataset.col) return
 
     event.preventDefault()
-    // Усі колонки — рівно як зараз на екрані: сума тоді дорівнює таблиці, і
-    // браузер не розкладає різницю по інших колонках посеред руху.
-    for (const cell of headerCells()) cell.style.width = `${cell.getBoundingClientRect().width}px`
+    // Усі колонки — рівно як зараз на екрані, таблиця — їхня сума: тоді рух
+    // межі змінює лише цю колонку, а не розкладається по сусідах.
+    const cells = headerCells()
+    const widths = cells.map(item => item.getBoundingClientRect().width)
+    cells.forEach((item, index) => { item.style.width = `${widths[index]}px` })
+    const tableWidth = widths.reduce((sum, width) => sum + width, 0)
+    table.style.width = `${tableWidth}px`
 
-    const leftWidth = left.getBoundingClientRect().width
-    drag = { handle, left, right, startX: event.clientX, leftWidth, total: leftWidth + right.getBoundingClientRect().width, isMoved: false }
+    drag = { handle, cell, startX: event.clientX, startWidth: cell.getBoundingClientRect().width, tableWidth, isMoved: false }
     handle.setPointerCapture(event.pointerId)
     handle.classList.add('is-active')
     document.body.classList.add('t-resizing')
   })
 
   useEventListener(options.table, 'pointermove', (event: PointerEvent) => {
-    if (!drag) return
+    const table = options.table.value
+    if (!drag || !table) return
 
-    const left = Math.min(Math.max(drag.leftWidth + event.clientX - drag.startX, MIN_WIDTH), drag.total - MIN_WIDTH)
-    drag.left.style.width = `${left}px`
-    drag.right.style.width = `${drag.total - left}px`
+    const width = Math.max(drag.startWidth + event.clientX - drag.startX, MIN_WIDTH)
+    drag.cell.style.width = `${width}px`
+    table.style.width = `${drag.tableWidth + width - drag.startWidth}px`
     drag.isMoved = true
   })
 
   function endDrag(event: PointerEvent): void {
     if (!drag) return
 
-    const { handle, left, right, isMoved } = drag
+    const { handle, cell, isMoved } = drag
     drag = null
     if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId)
     handle.classList.remove('is-active')
     document.body.classList.remove('t-resizing')
 
-    // Клік без руху (і перший клік подвійного) ширин не фіксує.
-    const leftColumn = left.dataset.col
-    const rightColumn = right.dataset.col
-    if (!isMoved || !options.widthsKey || !leftColumn || !rightColumn) return
+    // Клік без руху (і перший клік подвійного) ширин не фіксує — таблицю назад.
+    const column = cell.dataset.col
+    if (!isMoved || !options.widthsKey || !column) {
+      fitTable(savedWidths.value)
+      return
+    }
 
-    TableWidthsState.set(options.widthsKey, {
-      ...savedWidths.value,
-      [leftColumn]: Math.round(left.getBoundingClientRect().width),
-      [rightColumn]: Math.round(right.getBoundingClientRect().width),
-    })
+    TableWidthsState.set(options.widthsKey, { ...savedWidths.value, [column]: Math.round(cell.getBoundingClientRect().width) })
   }
 
   useEventListener(options.table, 'pointerup', endDrag)
   useEventListener(options.table, 'pointercancel', endDrag)
 
-  useEventListener(options.table, 'dblclick', (event: MouseEvent) => {
-    const column = handleOf(event)?.closest('th')?.dataset.col
-    if (!column || !options.widthsKey) return
-
-    const rest = { ...savedWidths.value }
-    delete rest[column]
-    TableWidthsState.set(options.widthsKey, rest)
+  function keepWidths(own: Record<string, number>): void {
+    if (!options.widthsKey) return
+    TableWidthsState.set(options.widthsKey, own)
     // Наново заміряти: автоматична ширина — та, що дає браузер за вмістом.
     unfreezeWidths()
     void nextTick(freezeWidths)
+  }
+
+  useEventListener(options.table, 'dblclick', (event: MouseEvent) => {
+    const column = handleOf(event)?.closest('th')?.dataset.col
+    if (!column) return
+
+    const rest = { ...savedWidths.value }
+    delete rest[column]
+    keepWidths(rest)
+  })
+
+  // Кнопка «скинути ширину» в підвалі UiTableCard. Без `widthsKey` — null: інакше
+  // картка всередині такої таблиці взяла б ширини таблиці-предка.
+  provide(TABLE_WIDTHS_KEY, options.widthsKey === undefined ? null : {
+    hasOwn: computed(() => Object.keys(savedWidths.value).length > 0),
+    reset: () => keepWidths({}),
   })
 
   // Обрізаному — повний текст у підказці, коли навели.

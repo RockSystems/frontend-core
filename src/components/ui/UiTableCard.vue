@@ -6,12 +6,12 @@
 // людина шукала кнопку скидання вгорі й оновлювала всю сторінку.
 
 import { SharedConfig } from '../../config'
-import { CircleAlert, FoldHorizontal, FunnelX, Inbox, RotateCw, SearchX, UnfoldHorizontal } from '@lucide/vue'
-import { computed, provide, ref } from 'vue'
+import { CircleAlert, FoldHorizontal, FunnelX, Inbox, RotateCcw, RotateCw, SearchX, UnfoldHorizontal } from '@lucide/vue'
+import { computed, inject, provide, ref } from 'vue'
 import UiButton from './UiButton.vue'
 import UiIconButton from './UiIconButton.vue'
 import type { ResettableFilters } from '../../composables/useServerList'
-import { TABLE_CARD_KEY } from '../tables/tableCard.context'
+import { TABLE_CARD_KEY, TABLE_WIDTHS_KEY } from '../tables/tableCard.context'
 import { TableViewState } from '../tables/tableView'
 
 withDefaults(defineProps<{
@@ -49,10 +49,21 @@ const hasViewSwitch = computed(() => subRowsCount.value > 0)
 const viewLabels = SharedConfig.get().labels.tableView
 // Підпис — на що кнопка перемкне.
 const viewSwitchLabel = computed(() => TableViewState.isWide.value ? viewLabels?.toStacked : viewLabels?.toWide)
+
+// Скинути ширини — значок у правому куті шапки, лише коли є що скидати, і, як
+// межі колонок, видно, коли курсор над шапкою. Кут прилипає до області
+// прокрутки, а не до таблиці: широку не треба гортати до кінця.
+const widths = inject(TABLE_WIDTHS_KEY, null)
+const widthsResetLabel = SharedConfig.get().labels.columnWidthsReset
+// Наведено на значок — межі змінених колонок світяться (table.scss).
+const isWidthsPreview = ref(false)
 </script>
 
 <template>
-  <section class="ui-table-card" :class="{ 'ui-table-card--fit': isFitContent }">
+  <section
+    class="ui-table-card"
+    :class="{ 'ui-table-card--fit': isFitContent, 't-widths-preview': isWidthsPreview && widths?.hasOwn.value }"
+  >
     <div v-if="isError" class="ui-table-card__state ui-table-card__state--error" role="alert">
       <CircleAlert :size="20" class="ui-table-card__icon" />
       <p class="ui-table-card__text">{{ errorText }}</p>
@@ -77,6 +88,22 @@ const viewSwitchLabel = computed(() => TableViewState.isWide.value ? viewLabels?
     </div>
 
     <div v-else class="ui-table-card__scroll">
+      <div v-if="widths?.hasOwn.value" class="ui-table-card__corner">
+        <UiIconButton
+          class="ui-table-card__cap"
+          variant="ghost"
+          tone="muted"
+          :aria-label="widthsResetLabel"
+          :title="widthsResetLabel"
+          @click="isWidthsPreview = false; widths.reset()"
+          @pointerenter="isWidthsPreview = true"
+          @pointerleave="isWidthsPreview = false"
+          @focus="isWidthsPreview = true"
+          @blur="isWidthsPreview = false"
+        >
+          <RotateCcw :size="12" />
+        </UiIconButton>
+      </div>
       <slot />
     </div>
 
@@ -118,6 +145,48 @@ const viewSwitchLabel = computed(() => TableViewState.isWide.value ? viewLabels?
   &--fit {
     max-height: none;
     flex: none;
+  }
+
+  // Кут над шапкою: нульової висоти перед таблицею, прилипає до верху й лівого
+  // краю області прокрутки й шириною в її видиму частину — без смуги прокрутки.
+  &__corner {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    height: 0;
+  }
+
+  // Плашка на всю висоту шапки (`--t-head-h` ставить useVirtualTable) кольору
+  // шапки: заголовок під нею м'яко зникає, а не визирає обрізком. Лівий край —
+  // перехід із прозорого, нижня межа продовжує лінію шапки.
+  // Через __corner — сильніше за розміри й ховер самої UiIconButton.
+  &__corner &__cap {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: var(--t-head-h, 36px);
+    padding-left: 12px;
+    border-bottom: 1px solid $color-border;
+    border-radius: 0;
+    background: linear-gradient(to right, transparent, $color-page-bg 12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+
+    &:hover:not(:disabled) { background: linear-gradient(to right, transparent, $color-page-bg 12px); color: $color-accent-ink; }
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  &__scroll:has(thead:hover) &__corner &__cap {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   &__state {
