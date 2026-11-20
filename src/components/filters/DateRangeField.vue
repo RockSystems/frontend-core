@@ -175,10 +175,14 @@ function applyPreset(preset: PeriodPreset): void {
 }
 
 function apply(): void {
-  if (draftPeriod.value) {
-    emit('update:period', draftPeriod.value as TPeriod)
-    isOpen.value = false
-  }
+  const next = draftPeriod.value
+  if (!next) return
+
+  // Ті самі дати — той самий вибір: відносний пресет не стає конкретними датами.
+  const current = props.period
+  const isSame = current !== null && current.from === next.from && current.to === next.to
+  emit('update:period', (isSame ? current : next) as TPeriod)
+  isOpen.value = false
 }
 
 function clear(): void {

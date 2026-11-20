@@ -7,10 +7,13 @@
 
 import type { UrlReader } from './urlState.helper'
 import type { SortDirection } from '../composables/useServerTable'
+import type { PeriodPresetId } from './periodPresets.helper'
 
 export interface UrlPeriod {
   from: string
   to: string
+  /** Відносний пресет (`range=thisMonth`): дати перераховані на сьогодні. */
+  preset?: PeriodPresetId
 }
 
 export class UrlParamsHelper {
