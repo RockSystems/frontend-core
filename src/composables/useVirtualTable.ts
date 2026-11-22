@@ -6,7 +6,7 @@
 // щоб висоту брати справжню, а не оцінку. Ширини колонок тримає тут же (нижче).
 
 import { useVirtualizer } from '@tanstack/vue-virtual'
-import { useEventListener } from '@vueuse/core'
+import { useDebounceFn, useEventListener, useResizeObserver } from '@vueuse/core'
 import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch, type Ref } from 'vue'
 import { TABLE_WIDTHS_KEY } from '../components/tables/tableCard.context'
 import { TableViewState } from '../components/tables/tableView'
@@ -94,7 +94,8 @@ export function useVirtualTable(options: {
   // Ширини колонок браузер рахує по намальованих рядках, і прокрутка їх смикала б.
   // Тому підбираємо їх один раз — по ~50 рядках — і заморожуємо (`t--frozen`,
   // table-layout: fixed): далі колонки не рухаються, а довше за ширину
-  // обрізається трьома крапками з підказкою. Наново — інша вибірка чи вид.
+  // обрізається трьома крапками з підказкою. Наново — інша вибірка, вид чи
+  // ширина картки.
   function headerCells(): HTMLTableCellElement[] {
     const head = options.table.value?.tHead
     // Шапка з кількох рядків (групи колонок): fixed бере ширини з першого, а там
@@ -123,7 +124,9 @@ export function useVirtualTable(options: {
     // Спершу всі заміри, потім усі ширини: інакше кожна записана ширина
     // перераховувала б розкладку для наступного заміру. Підтягнута руками
     // колонка бере свою ширину, решта — заміряну.
-    const widths = cells.map(cell => Math.ceil(cell.getBoundingClientRect().width))
+    // Дробні, як є: округлені вгору в сумі виходили ширші за картку на кілька
+    // пікселів, і прокрутка вбік зʼявлялась навіть там, де все вміщалось.
+    const widths = cells.map(cell => cell.getBoundingClientRect().width)
     const own = savedWidths.value
     cells.forEach((cell, index) => {
       cell.style.boxSizing = 'border-box'
@@ -142,6 +145,23 @@ export function useVirtualTable(options: {
   // Новий перший рядок — інша вибірка; інший вид — інші колонки.
   watch([() => options.rows()[0]?.id, () => TableViewState.current.value], unfreezeWidths)
   watch([items, () => options.rows()[0]?.id, () => TableViewState.current.value], freezeWidths, { flush: 'post' })
+
+  // Картка стала іншої ширини (вікно, масштаб сторінки, бічне меню) — заміряні
+  // ширини вже не її: лишились би прокрутка вбік або порожнеча в колонках.
+  // Міряємо наново; підтягнуті руками колонки лишаються своїми.
+  let cardWidth = 0
+  const remeasure = useDebounceFn(() => {
+    if (drag || !isWidthsWarm.value) return
+    unfreezeWidths()
+    void nextTick(freezeWidths)
+  }, 150)
+  useResizeObserver(scrollEl, ([entry]) => {
+    const width = Math.round(entry.contentRect.width)
+    if (width === cardWidth) return
+    const isFirst = cardWidth === 0
+    cardWidth = width
+    if (!isFirst) void remeasure()
+  })
 
   // === Ширини руками ========================================================
   // Як в Excel: межа тягне лише свою колонку, решта лишаються своєї ширини й
