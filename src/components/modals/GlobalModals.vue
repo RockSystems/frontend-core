@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BaseModal from "./BaseModal.vue";
+import TableTextDialog from "../tables/TableTextDialog.vue";
 import {UntypedModalService} from "../../plugins/modals.plugin";
 
 defineProps<{ service: UntypedModalService }>();
@@ -17,4 +18,6 @@ defineProps<{ service: UntypedModalService }>();
       />
     </BaseModal>
   </TransitionGroup>
+  <!-- Повний вміст обрізаної комірки таблиці: його відкриває сама таблиця, без реєстру модалок. -->
+  <TableTextDialog />
 </template>

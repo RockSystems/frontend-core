@@ -212,12 +212,35 @@
   }
 }
 
+// Замір ширин (useVirtualTable, мить перед заморозкою): усе в один рядок, як і
+// показуватиметься, і таблиця на всю ширину вмісту — колонки беруть природну ширину.
+.t--measuring {
+  table-layout: auto;
+  width: max-content !important;
+
+  .t__td,
+  .t__th { white-space: nowrap; }
+}
+
 // Ширини заморожені (useVirtualTable): колонки не рухаються при прокрутці, довше за
-// ширину обрізається трьома крапками, повний текст — у підказці.
+// ширину обрізається трьома крапками, повний текст — у підказці й у вікні по кліку.
 .t--frozen {
   table-layout: fixed;
 
   .t__td { white-space: nowrap; }
+
+  // Текстова колонка з переносом (meta.wrap): до трьох рядків, далі «…».
+  .t__td[data-wrap] { white-space: normal; }
+
+  .t__td[data-wrap] .t__cell {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow-wrap: anywhere;
+  }
+
+  .t__cell.is-cut,
+  .t__sub.is-cut { cursor: pointer; }
 
   .t__cell {
     overflow: hidden;

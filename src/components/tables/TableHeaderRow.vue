@@ -18,6 +18,7 @@ import { computed, inject, watchEffect } from 'vue'
 import { SharedConfig } from '../../config'
 import { TABLE_CARD_KEY } from './tableCard.context'
 import { TableViewState } from './tableView'
+import { TableColumnKind } from './tableColumnKind'
 
 // Межа колонки для зміни ширини. Тягне й зберігає useVirtualTable; тут лише
 // місце й id колонки (`data-col`), а видно межу, лише коли таблиця це вміє.
@@ -83,6 +84,7 @@ watchEffect((onCleanup) => {
         :class="{ 't__th--sortable': header.column.getCanSort() }"
         :style="alignOf(header)"
         :data-col="header.column.id"
+        :data-kind="TableColumnKind.of(header.column)"
         @click="onSort(header)"
       >
         <!-- t__th-stack — каркас дворядкової шапки стиснутого виду: другий рядок
