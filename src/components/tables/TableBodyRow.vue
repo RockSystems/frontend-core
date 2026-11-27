@@ -6,6 +6,7 @@ import { ChevronDown, ChevronRight } from '@lucide/vue'
 import UiIconButton from '../ui/UiIconButton.vue'
 import { SharedConfig } from '../../config'
 import { TableViewState } from './tableView'
+import { TableColumnKind } from './tableColumnKind'
 
 defineProps<{
   row: Row<T>
@@ -48,6 +49,8 @@ const isWide = TableViewState.isWide
       <td
         class="t__td"
         :style="cell.column.columnDef.meta?.align ? { textAlign: cell.column.columnDef.meta.align } : undefined"
+        :data-kind="TableColumnKind.of(cell.column)"
+        :data-wrap="cell.column.columnDef.meta?.wrap || undefined"
       >
         <div class="t__cell">
           <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />

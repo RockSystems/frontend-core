@@ -72,6 +72,10 @@ export type SharedLabels = {
     columnResize?: string
     /** Підказка значка в куті шапки: усім колонкам — автоматичну ширину. */
     columnWidthsReset?: string
+    /** Плашки комірки не влізли в три рядки (TableChips): «ще 4». Без нього — «+4». */
+    tableMore?: (count: number) => string
+    /** Підказка обрізаної комірки: клік відкриває повний текст. Без неї — сам текст. */
+    tableShowFull?: string
     /** Рядок фільтрів. */
     resetFilters: string
     exportPreparing: string
