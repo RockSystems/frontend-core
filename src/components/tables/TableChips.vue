@@ -103,8 +103,10 @@ function showAll(): void {
   white-space: nowrap;
 }
 
+// !important: плашка — чужий компонент зі своїм scoped `display` (`.ui-badge[data-v]`),
+// і звичайний клас програвав йому — сховані плашки лишались видимими.
 .t-chips__item--hidden {
-  display: none;
+  display: none !important;
 }
 
 .t-chips__more {
