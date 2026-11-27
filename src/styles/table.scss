@@ -229,7 +229,9 @@
 
   .t__td { white-space: nowrap; }
 
+  // Розкритий рядок — свій вміст зі своєю версткою, перенос там потрібен.
   // Текстова колонка з переносом (meta.wrap): до трьох рядків, далі «…».
+  .t__td--details,
   .t__td[data-wrap] { white-space: normal; }
 
   .t__td[data-wrap] .t__cell {
