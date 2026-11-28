@@ -10,10 +10,16 @@ import { TableTextState } from './tableText'
 const view = TableTextState.current
 const nodeHost = useTemplateRef<HTMLElement>('nodeHost')
 
-// Плашки — копією вмісту комірки: ті самі класи, тож і той самий вигляд.
+// Плашки — копією вмісту комірки: ті самі класи, тож і той самий вигляд. У копії
+// всі плашки видно, а «ще N» не потрібне — знімаємо це з самої копії, бо стилі
+// схованої плашки сильніші за будь-яке правило вікна.
 watch(view, async (current) => {
   await nextTick()
-  if (current?.node && nodeHost.value) nodeHost.value.replaceChildren(current.node.cloneNode(true))
+  if (!current?.node || !nodeHost.value) return
+  const copy = current.node.cloneNode(true) as Element
+  for (const item of copy.querySelectorAll('.t-chips__item--hidden')) item.classList.remove('t-chips__item--hidden')
+  for (const more of copy.querySelectorAll('.t-chips__more')) more.remove()
+  nodeHost.value.replaceChildren(copy)
 })
 
 // Раніше за модалки (capture) і з preventDefault: таблиця буває й у модалці, і Esc
@@ -47,20 +53,5 @@ useEventListener(window, 'keydown', (event: KeyboardEvent) => {
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-// Копія плашок — без обмеження в три рядки й без «ще N».
-.table-text__node {
-  .t-chips {
-    max-height: none;
-  }
-
-  .t-chips__item--hidden {
-    display: revert;
-  }
-
-  .t-chips__more {
-    display: none;
-  }
 }
 </style>
